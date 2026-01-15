@@ -58,7 +58,8 @@ micro1/
 │   │   ├── valuations/        # DCF, Comps, Precedents
 │   │   ├── deals/             # LBO, M&A analysis
 │   │   ├── exports/           # PDF and PowerPoint export
-│   │   └── excel/             # Excel add-in sync API
+│   │   ├── excel/             # Excel add-in sync API
+│   │   └── industry/          # Industry-specific models
 │   ├── core/                  # Business logic
 │   │   ├── engine/            # Calculation engine
 │   │   │   ├── base_model.py  # Abstract financial model
@@ -68,7 +69,10 @@ micro1/
 │   │       ├── lbo_model.py   # LBO with returns
 │   │       ├── three_statement.py  # 3-statement model
 │   │       ├── operating_model.py  # Operating model
-│   │       └── cash_flow_13week.py  # 13-week cash flow
+│   │       ├── cash_flow_13week.py  # 13-week cash flow
+│   │       ├── sale_leaseback.py  # Sale-leaseback transactions
+│   │       ├── reit_model.py  # REIT valuation
+│   │       └── nav_model.py  # NAV/sum-of-the-parts
 │   ├── db/models/             # SQLAlchemy models
 │   ├── alembic/               # Database migrations
 │   ├── services/              # Business services
@@ -246,6 +250,19 @@ npm run dev
 | POST | `/api/v1/deals/merger/accretion` | M&A accretion/dilution | No |
 | POST | `/api/v1/deals/spinoff` | Spin-off analysis | No |
 | POST | `/api/v1/deals/contribution` | Contribution analysis | No |
+
+### Industry-Specific Models
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/industry/sale-leaseback/analyze` | Sale-leaseback transaction analysis | No |
+| POST | `/api/v1/industry/sale-leaseback/sensitivity` | Sale-leaseback sensitivity | No |
+| POST | `/api/v1/industry/reit/analyze` | REIT valuation and metrics | No |
+| POST | `/api/v1/industry/reit/ffo-affo` | FFO/AFFO calculation | No |
+| POST | `/api/v1/industry/reit/sensitivity` | REIT sensitivity analysis | No |
+| POST | `/api/v1/industry/nav/analyze` | Net Asset Value calculation | No |
+| POST | `/api/v1/industry/nav/sotp` | Sum-of-the-parts breakdown | No |
+| POST | `/api/v1/industry/nav/sensitivity` | NAV sensitivity analysis | No |
 
 ### Export & Reports
 
@@ -438,7 +455,7 @@ curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
 ```bash
 cd backend
 
-# Run all tests (105 tests)
+# Run all tests (126 tests)
 pytest tests/ -v
 
 # Run specific test file
@@ -448,6 +465,7 @@ pytest tests/test_websocket.py -v
 pytest tests/test_financial_models.py -v
 pytest tests/test_export.py -v
 pytest tests/test_excel_api.py -v
+pytest tests/test_industry_models.py -v
 
 # Run with coverage
 pytest tests/ --cov=core --cov=services --cov-report=html
@@ -603,7 +621,16 @@ Returns a sensitivity matrix showing how output varies with input changes.
 - [x] Excel API tests (21 tests)
 - [x] Total: 105 tests passing
 
-### Phase 7: Production Ready (Next)
+### Phase 7: Industry-Specific Models (Completed)
+- [x] Sale-Leaseback Model (transaction analysis, NPV, coverage ratios)
+- [x] REIT Valuation Model (FFO/AFFO, NAV, dividend analysis)
+- [x] NAV Model (sum-of-the-parts, holding company discount)
+- [x] Industry API endpoints with full analysis
+- [x] Sensitivity analysis for all industry models
+- [x] Industry model tests (21 tests)
+- [x] Total: 126 tests passing
+
+### Phase 8: Production Ready (Next)
 - [ ] Performance optimization
 - [ ] Security audit
 - [ ] Accessibility compliance
@@ -894,4 +921,96 @@ The add-in supports full offline operation:
 
 ---
 
-**Current Status**: Phase 6 Complete - Full Excel add-in with sync engine, offline support, task pane UI, and backend API. 105 tests passing.
+---
+
+## Industry-Specific Models
+
+### Sale-Leaseback Analysis
+
+Analyze sale-leaseback transactions including proceeds, rent coverage, NPV, and financial impact.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/industry/sale-leaseback/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "properties": [
+      {
+        "name": "Corporate HQ",
+        "property_type": "office",
+        "square_feet": 100000,
+        "current_book_value": 20000000,
+        "market_value": 30000000,
+        "annual_noi": 2100000
+      }
+    ],
+    "target_cap_rate": 0.07,
+    "current_ebitda": 10000000,
+    "annual_escalation_rate": 0.025,
+    "projection_years": 15
+  }'
+```
+
+**Response includes:**
+- Portfolio summary (market value, NOI, implied cap rate)
+- Transaction economics (proceeds, gain/loss, tax impact)
+- Lease projections (annual rents, escalation)
+- Coverage ratios (EBITDA coverage, FCCR)
+- NPV analysis (breakeven year, IRR)
+- Use of proceeds analysis
+
+### REIT Valuation
+
+Complete REIT analysis with FFO/AFFO, NAV, and dividend metrics.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/industry/reit/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shares_outstanding": 100000000,
+    "current_share_price": 25.0,
+    "total_noi": 150000000,
+    "total_debt": 500000000,
+    "rental_revenue": 200000000,
+    "property_expenses": 50000000,
+    "depreciation": 40000000,
+    "target_payout_ratio": 0.75,
+    "projection_years": 5
+  }'
+```
+
+**Response includes:**
+- FFO/AFFO calculation and per-share metrics
+- Dividend analysis (yield, payout ratios, coverage)
+- NAV calculation (premium/discount to market)
+- Capital structure metrics (leverage ratios)
+- Multi-year projections
+
+### NAV Model (Sum-of-the-Parts)
+
+Calculate Net Asset Value with holding company discount.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/industry/nav/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "shares_outstanding": 100000000,
+    "current_share_price": 15.0,
+    "total_real_estate": 1000000000,
+    "total_investments": 200000000,
+    "cash_and_equivalents": 50000000,
+    "total_debt": 400000000,
+    "holding_company_discount": 0.10
+  }'
+```
+
+**Response includes:**
+- Asset valuation by type
+- Liability valuation
+- NAV components (GAV, liabilities, discounts)
+- Per-share metrics (NAV/share, premium/discount)
+- Sum-of-the-parts breakdown
+- Sensitivity analysis
+
+---
+
+**Current Status**: Phase 7 Complete - Industry-specific models (Sale-Leaseback, REIT, NAV) with full API endpoints and sensitivity analysis. 126 tests passing.
