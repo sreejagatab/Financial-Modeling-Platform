@@ -56,7 +56,9 @@ micro1/
 │   │   ├── collaboration/     # WebSocket & comments
 │   │   ├── models/            # Financial model CRUD
 │   │   ├── valuations/        # DCF, Comps, Precedents
-│   │   └── deals/             # LBO, M&A analysis
+│   │   ├── deals/             # LBO, M&A analysis
+│   │   ├── exports/           # PDF and PowerPoint export
+│   │   └── excel/             # Excel add-in sync API
 │   ├── core/                  # Business logic
 │   │   ├── engine/            # Calculation engine
 │   │   │   ├── base_model.py  # Abstract financial model
@@ -95,7 +97,22 @@ micro1/
 └── excel-addin/               # Office.js Excel Add-in
     ├── src/
     │   ├── functions/         # Custom functions (UDFs)
-    │   └── sync/              # Sync engine
+    │   │   └── platformFunctions.ts  # FP.GET, FP.LINK, FP.LIVE, etc.
+    │   ├── sync/              # Sync engine
+    │   │   └── SyncEngine.ts  # WebSocket sync with conflict resolution
+    │   ├── offline/           # Offline storage
+    │   │   └── IndexedDBStore.ts  # IndexedDB for offline support
+    │   └── taskpane/          # Task pane UI
+    │       ├── components/    # React components
+    │       │   ├── App.tsx    # Main app component
+    │       │   ├── Header.tsx # Header with status
+    │       │   ├── LoginDialog.tsx  # Authentication dialog
+    │       │   └── tabs/      # Tab components
+    │       │       ├── HomeTab.tsx
+    │       │       ├── LinksTab.tsx
+    │       │       ├── SyncTab.tsx
+    │       │       └── SettingsTab.tsx
+    │       └── index.tsx      # Entry point
     └── manifest.xml
 ```
 
@@ -247,6 +264,22 @@ npm run dev
 | POST | `/api/v1/export/templates` | Create custom template | No |
 | DELETE | `/api/v1/export/templates/{id}` | Delete template | No |
 | POST | `/api/v1/export/templates/{id}/clone` | Clone template | No |
+
+### Excel Add-in API
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/excel/get-value` | Fetch value from model | No |
+| POST | `/api/v1/excel/create-link` | Create bidirectional link | No |
+| POST | `/api/v1/excel/scenario-value` | Get scenario-specific value | No |
+| POST | `/api/v1/excel/sync` | Sync cell change | No |
+| POST | `/api/v1/excel/sync-batch` | Batch sync operations | No |
+| POST | `/api/v1/excel/sensitivity` | Calculate sensitivity matrix | No |
+| POST | `/api/v1/excel/audit` | Get cell audit info | No |
+| POST | `/api/v1/excel/comments` | Get cell comments | No |
+| POST | `/api/v1/excel/unlink` | Remove cell link | No |
+| GET | `/api/v1/excel/links/{client_id}` | Get client's linked cells | No |
+| WS | `/api/v1/excel/ws` | Real-time Excel sync WebSocket | No |
 
 ## Real-time Collaboration
 
@@ -405,7 +438,7 @@ curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
 ```bash
 cd backend
 
-# Run all tests (84 tests)
+# Run all tests (105 tests)
 pytest tests/ -v
 
 # Run specific test file
@@ -414,6 +447,7 @@ pytest tests/test_auth.py -v
 pytest tests/test_websocket.py -v
 pytest tests/test_financial_models.py -v
 pytest tests/test_export.py -v
+pytest tests/test_excel_api.py -v
 
 # Run with coverage
 pytest tests/ --cov=core --cov=services --cov-report=html
@@ -455,11 +489,49 @@ The Excel add-in provides custom functions for platform integration:
 
 | Function | Description | Example |
 |----------|-------------|---------|
-| `=FP.GET(model, cell)` | Fetch value from platform | `=FP.GET("LBO/Deal1", "IRR")` |
-| `=FP.LINK(model, cell)` | Bidirectional link | `=FP.LINK("DCF/Base", "WACC")` |
-| `=FP.SCENARIO(name, cell)` | Scenario-specific value | `=FP.SCENARIO("Bear", B5)` |
-| `=FP.LIVE(source, id, field)` | Streaming data | `=FP.LIVE("market", "AAPL", "price")` |
-| `=FP.SENSITIVITY(in, out, steps)` | Sensitivity table | `=FP.SENSITIVITY(B2, C10, 10)` |
+| `=FP.GET(model, cell, [version])` | Fetch value from platform | `=FP.GET("LBO/Deal1", "IRR")` |
+| `=FP.LINK(model, cell)` | Bidirectional sync link | `=FP.LINK("DCF/Base", "WACC")` |
+| `=FP.SCENARIO(name, cell)` | Scenario-specific value | `=FP.SCENARIO("Bear_Case", "B5")` |
+| `=FP.LIVE(source, id, field)` | Streaming real-time data | `=FP.LIVE("market", "AAPL", "price")` |
+| `=FP.SENSITIVITY(in, out, steps)` | Sensitivity analysis table | `=FP.SENSITIVITY("B2", "C10", 10)` |
+| `=FP.AUDIT(cell, field)` | Get audit information | `=FP.AUDIT("B5", "last_modified_by")` |
+| `=FP.COMMENT(cell)` | Get latest comment | `=FP.COMMENT("B5")` |
+
+### Function Details
+
+#### FP.GET - Fetch Value
+```excel
+=FP.GET("Portfolio/CompanyA/DCF", "IRR")
+=FP.GET("LBO/Deal1", "B5", 2)  // Specific version
+```
+Retrieves a value from the platform. Values are cached for offline access.
+
+#### FP.LINK - Bidirectional Link
+```excel
+=FP.LINK("Portfolio/CompanyA/Model", "WACC")
+```
+Creates a bidirectional sync between the Excel cell and platform. Changes in either location are synchronized.
+
+#### FP.SCENARIO - Scenario Values
+```excel
+=FP.SCENARIO("Base_Case", "Revenue")
+=FP.SCENARIO("Bull_Case", "EBITDA")
+=FP.SCENARIO("Stress_Test", "Cash_Balance")
+```
+Gets values from specific scenarios (Base, Upside, Downside, Stress).
+
+#### FP.LIVE - Streaming Data
+```excel
+=FP.LIVE("market", "AAPL", "price")
+=FP.LIVE("platform", "model_123", "irr")
+```
+Streaming function that updates automatically when the source data changes.
+
+#### FP.SENSITIVITY - Sensitivity Analysis
+```excel
+=FP.SENSITIVITY("B2", "D5", 10)  // 10 steps
+```
+Returns a sensitivity matrix showing how output varies with input changes.
 
 ## Development Roadmap
 
@@ -518,11 +590,24 @@ The Excel add-in provides custom functions for platform integration:
 - [x] Export tests (28 tests)
 - [x] Total: 84 tests passing
 
-### Phase 6: Excel Add-in Completion (Next)
-- [ ] Full sync engine
-- [ ] Offline support
-- [ ] Custom function streaming
-- [ ] Task pane UI
+### Phase 6: Excel Add-in Completion (Completed)
+- [x] Full sync engine with WebSocket support
+- [x] IndexedDB offline storage for pending operations and cache
+- [x] Custom function streaming (FP.LIVE)
+- [x] Task pane UI with React and Fluent UI
+- [x] Backend Excel API endpoints
+- [x] Cell linking and bidirectional sync
+- [x] Scenario value retrieval
+- [x] Sensitivity analysis from Excel
+- [x] Audit trail and comments integration
+- [x] Excel API tests (21 tests)
+- [x] Total: 105 tests passing
+
+### Phase 7: Production Ready (Next)
+- [ ] Performance optimization
+- [ ] Security audit
+- [ ] Accessibility compliance
+- [ ] Documentation completion
 
 ## Environment Variables
 
@@ -771,4 +856,42 @@ curl "http://localhost:8001/api/v1/export/templates?template_type=lbo&format=pdf
 
 ---
 
-**Current Status**: Phase 5 Complete - Full export system with PDF and PowerPoint generation, customizable report templates, and template management. 84 tests passing.
+## Excel Add-in Task Pane
+
+The Excel add-in includes a full task pane UI built with React and Fluent UI:
+
+### Home Tab
+- Connection status indicator
+- Quick function insertion
+- Function reference guide
+
+### Links Tab
+- View all linked cells
+- Refresh linked values
+- Unlink cells
+- Navigate to cells in workbook
+
+### Sync Tab
+- Online/offline status
+- Pending operations count
+- Force sync button
+- Clear offline data
+
+### Settings Tab
+- User account management
+- Dark/light theme toggle
+- Auto-sync configuration
+- API URL configuration
+
+### Offline Support
+
+The add-in supports full offline operation:
+
+1. **IndexedDB Storage**: Pending operations are stored locally
+2. **Cache**: Fetched values are cached for offline access
+3. **Auto-Sync**: Changes sync automatically when connection is restored
+4. **Conflict Resolution**: Last-write-wins with timestamp comparison
+
+---
+
+**Current Status**: Phase 6 Complete - Full Excel add-in with sync engine, offline support, task pane UI, and backend API. 105 tests passing.
