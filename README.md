@@ -210,6 +210,135 @@ npm run dev
 - **API Docs**: http://localhost:8001/docs
 - **WebSocket**: ws://localhost:8001/ws/models/{model_id}
 
+## Docker Deployment
+
+### Quick Start with Docker Compose
+
+```bash
+# Clone and navigate to project
+cd micro1
+
+# Copy environment file and configure
+cp .env.example .env
+# Edit .env with your settings
+
+# Start all services (PostgreSQL, Redis, Backend, Frontend)
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+### Development Mode
+
+```bash
+# Start with hot-reload enabled
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# This includes:
+# - Backend with uvicorn --reload
+# - Frontend with Vite dev server
+# - pgAdmin at http://localhost:5050
+# - Redis Commander at http://localhost:8081
+```
+
+### Production Mode
+
+```bash
+# Start with production settings
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# This includes:
+# - Optimized builds
+# - Resource limits
+# - Multiple replicas
+# - Required environment variables validation
+```
+
+### Individual Services
+
+```bash
+# Build backend only
+docker build -t fmp-backend ./backend
+
+# Build frontend only
+docker build -t fmp-frontend ./frontend
+
+# Run backend with custom database
+docker run -d \
+  --name fmp-backend \
+  -e DATABASE_URL=postgresql://user:pass@host:5432/db \
+  -e REDIS_URL=redis://host:6379/0 \
+  -p 8001:8001 \
+  fmp-backend
+```
+
+### Environment Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POSTGRES_USER` | fmp_user | PostgreSQL username |
+| `POSTGRES_PASSWORD` | fmp_password | PostgreSQL password |
+| `POSTGRES_DB` | financial_platform | Database name |
+| `REDIS_URL` | redis://redis:6379/0 | Redis connection URL |
+| `SECRET_KEY` | (required in prod) | JWT signing key |
+| `VITE_API_URL` | http://localhost:8001 | Backend API URL for frontend |
+| `VITE_WS_URL` | ws://localhost:8001 | WebSocket URL for frontend |
+| `BACKEND_TARGET` | production | Docker build target (production/development) |
+| `FRONTEND_TARGET` | production | Docker build target (production/development) |
+
+### Docker Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Docker Network (fmp-network)            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌──────────┐    ┌──────────┐    ┌──────────────────────┐ │
+│   │ Frontend │◄──►│ Backend  │◄──►│ PostgreSQL + Redis   │ │
+│   │ (nginx)  │    │ (FastAPI)│    │                      │ │
+│   │ :3000    │    │ :8001    │    │ :5432      :6379     │ │
+│   └──────────┘    └──────────┘    └──────────────────────┘ │
+│                                                             │
+│   Optional:                                                 │
+│   ┌──────────┐    ┌──────────────┐    ┌────────────────┐   │
+│   │ MinIO    │    │ pgAdmin      │    │ Redis Commander│   │
+│   │ :9000    │    │ :5050        │    │ :8081          │   │
+│   └──────────┘    └──────────────┘    └────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Health Checks
+
+All services include health checks:
+
+```bash
+# Backend health
+curl http://localhost:8001/health
+
+# Frontend health
+curl http://localhost:3000/health
+
+# Docker health status
+docker-compose ps
+```
+
+### Volumes
+
+| Volume | Purpose |
+|--------|---------|
+| `fmp-postgres-data` | PostgreSQL data persistence |
+| `fmp-redis-data` | Redis AOF persistence |
+| `fmp-backend-logs` | Application logs |
+| `fmp-backend-data` | Uploaded files, exports |
+| `fmp-minio-data` | S3-compatible object storage |
+
 ## API Endpoints
 
 ### Authentication
@@ -1429,3 +1558,5 @@ curl -X POST http://localhost:8001/api/v1/due-diligence/recommendations \
 ---
 
 **Current Status**: Phase 10 Complete - Production-ready platform with rate limiting, request logging, error handling middleware, health checks, and Prometheus metrics. All phases (1-10) implemented. 196 backend tests passing.
+
+**Docker Support**: Full containerization with multi-stage Dockerfiles, docker-compose orchestration, development and production configurations, health checks, and persistent volumes.
