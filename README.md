@@ -12,6 +12,7 @@ A comprehensive SaaS platform for financial modeling, valuation analysis, and de
 - **Merger Models** - M&A accretion/dilution analysis
 - **Industry-Specific** - Sale-leaseback, REIT conversion, NAV models
 - **Bespoke Transactions** - Spin-off/carve-out, IP licensing, Reverse Morris Trust
+- **Due Diligence** - Vertical-specific workflows, findings tracker, risk matrix, QoE analysis
 
 ### Valuation Analysis
 - **DCF Valuation** - Discounted cash flow with WACC build
@@ -61,7 +62,8 @@ micro1/
 │   │   ├── exports/           # PDF and PowerPoint export
 │   │   ├── excel/             # Excel add-in sync API
 │   │   ├── industry/          # Industry-specific models
-│   │   └── bespoke/           # Bespoke transaction models
+│   │   ├── bespoke/           # Bespoke transaction models
+│   │   └── due_diligence/     # Due diligence workflows
 │   ├── core/                  # Business logic
 │   │   ├── engine/            # Calculation engine
 │   │   │   ├── base_model.py  # Abstract financial model
@@ -77,7 +79,8 @@ micro1/
 │   │       ├── nav_model.py  # NAV/sum-of-the-parts
 │   │       ├── spinoff_model.py  # Spin-off/carve-out
 │   │       ├── ip_licensing_model.py  # IP licensing
-│   │       └── rmt_model.py  # Reverse Morris Trust
+│   │       ├── rmt_model.py  # Reverse Morris Trust
+│   │       └── due_diligence.py  # Due diligence workflows
 │   ├── db/models/             # SQLAlchemy models
 │   ├── alembic/               # Database migrations
 │   ├── services/              # Business services
@@ -281,6 +284,20 @@ npm run dev
 | POST | `/api/v1/bespoke/rmt/tax-analysis` | RMT tax implications | No |
 | POST | `/api/v1/bespoke/rmt/accretion-dilution` | RMT accretion/dilution | No |
 
+### Due Diligence
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/due-diligence/analyze` | Comprehensive DD analysis | No |
+| POST | `/api/v1/due-diligence/checklist/{vertical}` | Vertical-specific checklist | No |
+| POST | `/api/v1/due-diligence/qoe` | Quality of Earnings analysis | No |
+| POST | `/api/v1/due-diligence/risk-matrix` | Risk matrix calculation | No |
+| POST | `/api/v1/due-diligence/findings/summarize` | Summarize DD findings | No |
+| POST | `/api/v1/due-diligence/recommendations` | Get DD recommendations | No |
+| GET | `/api/v1/due-diligence/verticals` | List available verticals | No |
+| GET | `/api/v1/due-diligence/categories` | List finding categories | No |
+| GET | `/api/v1/due-diligence/severities` | List severity levels | No |
+
 ### Export & Reports
 
 | Method | Endpoint | Description | Auth Required |
@@ -472,7 +489,7 @@ curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
 ```bash
 cd backend
 
-# Run all tests (150 tests)
+# Run all tests (166 tests)
 pytest tests/ -v
 
 # Run specific test file
@@ -484,6 +501,7 @@ pytest tests/test_export.py -v
 pytest tests/test_excel_api.py -v
 pytest tests/test_industry_models.py -v
 pytest tests/test_bespoke_models.py -v
+pytest tests/test_due_diligence.py -v
 
 # Run with coverage
 pytest tests/ --cov=core --cov=services --cov-report=html
@@ -657,11 +675,16 @@ Returns a sensitivity matrix showing how output varies with input changes.
 - [x] Bespoke model tests (24 tests)
 - [x] Total: 150 tests passing
 
-### Phase 9: Due Diligence (Next)
-- [ ] Vertical-specific workflows
-- [ ] Findings tracker
-- [ ] Recommendation engine
-- [ ] Risk matrix
+### Phase 9: Due Diligence (Completed)
+- [x] Vertical-specific workflows (Technology, Healthcare, Manufacturing, Real Estate)
+- [x] Findings tracker with severity levels (Critical, High, Medium, Low, Info)
+- [x] Quality of Earnings (QoE) analysis with adjustments
+- [x] Risk matrix with likelihood/impact scoring (1-25 scale)
+- [x] Recommendation engine with deal recommendations
+- [x] Progress tracking for work items and document collection
+- [x] Due diligence API endpoints
+- [x] Due diligence tests (16 tests)
+- [x] Total: 166 tests passing
 
 ### Phase 10: Production Ready
 - [ ] Performance optimization
@@ -1136,4 +1159,234 @@ curl -X POST http://localhost:8001/api/v1/bespoke/rmt/analyze \
 
 ---
 
-**Current Status**: Phase 8 Complete - Bespoke transaction models (Spin-off, IP Licensing, RMT) with full API endpoints and comprehensive analysis. 150 tests passing.
+## Due Diligence Module
+
+### Comprehensive DD Analysis
+
+Run full due diligence analysis with findings, QoE, and risk assessment.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/due-diligence/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target_name": "Target Corp",
+    "transaction_type": "acquisition",
+    "deal_value": 500000000,
+    "vertical": "technology",
+    "current_phase": "phase_1",
+    "reported_ebitda": 50000000,
+    "findings": [
+      {
+        "id": "f1",
+        "category": "financial",
+        "severity": "high",
+        "title": "Revenue Recognition",
+        "description": "Non-standard revenue recognition practices identified",
+        "impact_amount": 2000000,
+        "status": "open"
+      }
+    ],
+    "risks": [
+      {
+        "id": "r1",
+        "category": "commercial",
+        "title": "Customer Concentration",
+        "description": "Top 3 customers represent 60% of revenue",
+        "likelihood": "possible",
+        "impact": "major"
+      }
+    ]
+  }'
+```
+
+**Response includes:**
+- Vertical-specific checklist with categories
+- Findings summary by severity (critical/high/medium/low)
+- QoE adjustments and adjusted EBITDA
+- Risk matrix with weighted scores
+- Progress tracking
+- Deal recommendations (Proceed/Proceed with Caution/Do Not Proceed)
+
+### Vertical-Specific Checklists
+
+Get DD checklist tailored to industry vertical.
+
+```bash
+# Technology vertical
+curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/technology
+
+# Healthcare vertical
+curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/healthcare
+
+# Manufacturing vertical
+curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/manufacturing
+
+# Real Estate vertical
+curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/real_estate
+```
+
+**Available verticals:**
+- `technology` - IP, cybersecurity, tech stack assessment
+- `healthcare` - HIPAA, FDA, clinical operations
+- `manufacturing` - Supply chain, equipment, environmental
+- `real_estate` - Property, tenant, environmental
+- `financial_services` - Regulatory, compliance, risk
+- `retail` - Inventory, locations, e-commerce
+- `general` - Standard DD checklist
+
+### Quality of Earnings (QoE)
+
+Calculate adjusted EBITDA with QoE adjustments.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/due-diligence/qoe \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reported_ebitda": 10000000,
+    "adjustments": [
+      {
+        "id": "q1",
+        "category": "One-time",
+        "description": "Legal settlement expense",
+        "amount": 500000,
+        "is_addback": true,
+        "is_recurring": false,
+        "confidence_level": 0.95
+      },
+      {
+        "id": "q2",
+        "category": "Owner",
+        "description": "Above-market owner compensation",
+        "amount": 200000,
+        "is_addback": true,
+        "is_recurring": true,
+        "confidence_level": 0.90
+      }
+    ]
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "qoe_analysis": {
+    "reported_ebitda": 10000000,
+    "total_addbacks": 700000,
+    "total_deductions": 0,
+    "adjusted_ebitda": 10700000,
+    "adjustment_count": 2,
+    "confidence_weighted_ebitda": 10665000
+  }
+}
+```
+
+### Risk Matrix
+
+Calculate risk scores using likelihood × impact matrix.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/due-diligence/risk-matrix \
+  -H "Content-Type: application/json" \
+  -d '{
+    "risks": [
+      {
+        "id": "r1",
+        "category": "commercial",
+        "title": "Customer concentration",
+        "description": "Top 3 customers = 60% revenue",
+        "likelihood": "possible",
+        "impact": "major"
+      },
+      {
+        "id": "r2",
+        "category": "technology",
+        "title": "Legacy systems",
+        "description": "Core systems need replacement",
+        "likelihood": "likely",
+        "impact": "moderate"
+      }
+    ]
+  }'
+```
+
+**Risk scoring:**
+- Likelihood: rare (1), unlikely (2), possible (3), likely (4), almost_certain (5)
+- Impact: minor (1), moderate (2), major (3), severe (4), catastrophic (5)
+- Risk score = likelihood × impact (1-25 scale)
+- Categories: critical (20-25), high (12-19), medium (6-11), low (1-5)
+
+### Findings Summary
+
+Summarize DD findings by severity and category.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/due-diligence/findings/summarize \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "id": "f1",
+      "category": "financial",
+      "severity": "critical",
+      "title": "Revenue Recognition Issue",
+      "description": "Material revenue misstatement",
+      "impact_amount": 5000000,
+      "status": "open"
+    },
+    {
+      "id": "f2",
+      "category": "legal",
+      "severity": "high",
+      "title": "Pending Litigation",
+      "description": "Material lawsuit in progress",
+      "impact_amount": 2000000,
+      "status": "in_review"
+    }
+  ]'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "findings_summary": {
+    "total_findings": 2,
+    "critical": 1,
+    "high": 1,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "total_quantified_impact": 7000000,
+    "open_findings": 1,
+    "by_category": {
+      "financial": 1,
+      "legal": 1
+    }
+  }
+}
+```
+
+### DD Recommendations
+
+Get deal recommendations based on findings and risks.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/due-diligence/recommendations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target_name": "Target Corp",
+    "reported_ebitda": 10000000,
+    "findings": [...],
+    "risks": [...],
+    "qoe_adjustments": [...]
+  }'
+```
+
+**Deal recommendations:**
+- `PROCEED` - No significant issues identified
+- `PROCEED_WITH_CAUTION` - Issues identified, mitigation required
+- `DO_NOT_PROCEED` - Critical issues, deal not recommended
+
+---
+
+**Current Status**: Phase 9 Complete - Due Diligence module with vertical-specific workflows, findings tracker, QoE analysis, risk matrix, and recommendation engine. 166 tests passing.
