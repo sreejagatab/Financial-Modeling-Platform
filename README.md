@@ -11,6 +11,7 @@ A comprehensive SaaS platform for financial modeling, valuation analysis, and de
 - **LBO Models** - Leveraged buyout with IRR/MOIC calculations
 - **Merger Models** - M&A accretion/dilution analysis
 - **Industry-Specific** - Sale-leaseback, REIT conversion, NAV models
+- **Bespoke Transactions** - Spin-off/carve-out, IP licensing, Reverse Morris Trust
 
 ### Valuation Analysis
 - **DCF Valuation** - Discounted cash flow with WACC build
@@ -59,7 +60,8 @@ micro1/
 │   │   ├── deals/             # LBO, M&A analysis
 │   │   ├── exports/           # PDF and PowerPoint export
 │   │   ├── excel/             # Excel add-in sync API
-│   │   └── industry/          # Industry-specific models
+│   │   ├── industry/          # Industry-specific models
+│   │   └── bespoke/           # Bespoke transaction models
 │   ├── core/                  # Business logic
 │   │   ├── engine/            # Calculation engine
 │   │   │   ├── base_model.py  # Abstract financial model
@@ -72,7 +74,10 @@ micro1/
 │   │       ├── cash_flow_13week.py  # 13-week cash flow
 │   │       ├── sale_leaseback.py  # Sale-leaseback transactions
 │   │       ├── reit_model.py  # REIT valuation
-│   │       └── nav_model.py  # NAV/sum-of-the-parts
+│   │       ├── nav_model.py  # NAV/sum-of-the-parts
+│   │       ├── spinoff_model.py  # Spin-off/carve-out
+│   │       ├── ip_licensing_model.py  # IP licensing
+│   │       └── rmt_model.py  # Reverse Morris Trust
 │   ├── db/models/             # SQLAlchemy models
 │   ├── alembic/               # Database migrations
 │   ├── services/              # Business services
@@ -263,6 +268,18 @@ npm run dev
 | POST | `/api/v1/industry/nav/analyze` | Net Asset Value calculation | No |
 | POST | `/api/v1/industry/nav/sotp` | Sum-of-the-parts breakdown | No |
 | POST | `/api/v1/industry/nav/sensitivity` | NAV sensitivity analysis | No |
+
+### Bespoke Transactions
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/bespoke/spinoff/analyze` | Spin-off/carve-out analysis | No |
+| POST | `/api/v1/bespoke/spinoff/value-creation` | Value creation calculation | No |
+| POST | `/api/v1/bespoke/ip-licensing/analyze` | IP licensing analysis | No |
+| POST | `/api/v1/bespoke/ip-licensing/valuation` | IP license valuation | No |
+| POST | `/api/v1/bespoke/rmt/analyze` | Reverse Morris Trust analysis | No |
+| POST | `/api/v1/bespoke/rmt/tax-analysis` | RMT tax implications | No |
+| POST | `/api/v1/bespoke/rmt/accretion-dilution` | RMT accretion/dilution | No |
 
 ### Export & Reports
 
@@ -455,7 +472,7 @@ curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
 ```bash
 cd backend
 
-# Run all tests (126 tests)
+# Run all tests (150 tests)
 pytest tests/ -v
 
 # Run specific test file
@@ -466,6 +483,7 @@ pytest tests/test_financial_models.py -v
 pytest tests/test_export.py -v
 pytest tests/test_excel_api.py -v
 pytest tests/test_industry_models.py -v
+pytest tests/test_bespoke_models.py -v
 
 # Run with coverage
 pytest tests/ --cov=core --cov=services --cov-report=html
@@ -630,7 +648,22 @@ Returns a sensitivity matrix showing how output varies with input changes.
 - [x] Industry model tests (21 tests)
 - [x] Total: 126 tests passing
 
-### Phase 8: Production Ready (Next)
+### Phase 8: Bespoke Transactions (Completed)
+- [x] Spin-Off/Carve-Out Model (value creation, stranded costs, TSA)
+- [x] IP Licensing Model (royalties, milestones, NPV valuation)
+- [x] Reverse Morris Trust Model (tax efficiency, ownership, accretion)
+- [x] Bespoke API endpoints with full analysis
+- [x] Tax analysis and synergy calculations
+- [x] Bespoke model tests (24 tests)
+- [x] Total: 150 tests passing
+
+### Phase 9: Due Diligence (Next)
+- [ ] Vertical-specific workflows
+- [ ] Findings tracker
+- [ ] Recommendation engine
+- [ ] Risk matrix
+
+### Phase 10: Production Ready
 - [ ] Performance optimization
 - [ ] Security audit
 - [ ] Accessibility compliance
@@ -1013,4 +1046,94 @@ curl -X POST http://localhost:8001/api/v1/industry/nav/analyze \
 
 ---
 
-**Current Status**: Phase 7 Complete - Industry-specific models (Sale-Leaseback, REIT, NAV) with full API endpoints and sensitivity analysis. 126 tests passing.
+---
+
+## Bespoke Transaction Models
+
+### Spin-Off / Carve-Out Analysis
+
+Analyze corporate spin-offs and carve-out IPOs with value creation analysis.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/bespoke/spinoff/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction_type": "spinoff",
+    "spinco_name": "NewCo",
+    "spinco_ebitda": 100000000,
+    "spinco_debt": 50000000,
+    "parent_ebitda": 400000000,
+    "parent_debt": 200000000,
+    "spinco_ebitda_multiple": 10.0,
+    "parent_ebitda_multiple": 8.0,
+    "stranded_cost_amount": 15000000,
+    "transaction_costs": 5000000
+  }'
+```
+
+**Response includes:**
+- Pro-forma financials for both entities
+- Value creation from multiple expansion
+- Stranded cost analysis and mitigation schedule
+- Capital structure optimization
+- TSA (Transition Service Agreement) impact
+
+### IP Licensing Analysis
+
+Value intellectual property licensing deals with NPV analysis.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/bespoke/ip-licensing/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ip_type": "patent",
+    "ip_name": "Core Technology Portfolio",
+    "license_type": "exclusive",
+    "license_term_years": 10,
+    "royalty_rate": 0.05,
+    "upfront_fee": 5000000,
+    "licensee_base_revenue": 100000000,
+    "licensee_revenue_growth": 0.10,
+    "discount_rate": 0.12
+  }'
+```
+
+**Response includes:**
+- Royalty projections over license term
+- NPV of royalty stream
+- Milestone payment analysis
+- Comparable transaction analysis
+- Risk analysis by IP and license type
+
+### Reverse Morris Trust (RMT) Analysis
+
+Analyze tax-efficient spin-merger combinations.
+
+```bash
+curl -X POST http://localhost:8001/api/v1/bespoke/rmt/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "spinco_name": "SpinCo",
+    "acquirer_name": "Acquirer Inc",
+    "spinco_ebitda": 200000000,
+    "spinco_debt": 100000000,
+    "spinco_assets": 800000000,
+    "spinco_tax_basis": 300000000,
+    "acquirer_ebitda": 150000000,
+    "acquirer_shares": 100000000,
+    "acquirer_share_price": 25.0,
+    "cost_synergies": 30000000,
+    "corporate_tax_rate": 0.25
+  }'
+```
+
+**Response includes:**
+- Ownership analysis (>50% requirement for tax-free)
+- Tax savings calculation
+- Synergy phase-in schedule
+- Accretion/dilution analysis
+- Pro-forma combined financials
+
+---
+
+**Current Status**: Phase 8 Complete - Bespoke transaction models (Spin-off, IP Licensing, RMT) with full API endpoints and comprehensive analysis. 150 tests passing.
