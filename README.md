@@ -1,146 +1,451 @@
 # Financial Modeling Platform
 
-A comprehensive SaaS platform for financial modeling, valuation analysis, and deal execution. Built with Python/FastAPI backend, React/TypeScript frontend, and Excel Add-in integration.
+<div align="center">
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.11+-green.svg)
+![React](https://img.shields.io/badge/react-18.2-61dafb.svg)
+![TypeScript](https://img.shields.io/badge/typescript-5.3-3178c6.svg)
+![Tests](https://img.shields.io/badge/tests-196%20passing-brightgreen.svg)
+![License](https://img.shields.io/badge/license-MIT-yellow.svg)
+
+**Enterprise-grade SaaS platform for financial modeling, valuation analysis, and deal execution**
+
+[Features](#-features) | [Quick Start](#-quick-start) | [Documentation](#-documentation) | [API Reference](#-api-reference) | [AI Features](#-ai-powered-features)
+
+</div>
+
+---
+
+## Table of Contents
+
+- [Overview](#-overview)
+- [Architecture](#-architecture)
+- [Features](#-features)
+- [AI-Powered Features](#-ai-powered-features)
+- [Quick Start](#-quick-start)
+- [Project Structure](#-project-structure)
+- [Financial Models](#-financial-models)
+- [Workflows](#-workflows)
+- [API Reference](#-api-reference)
+- [WebSocket Real-time](#-websocket-real-time)
+- [Excel Add-in](#-excel-add-in)
+- [Testing](#-testing)
+- [Docker Deployment](#-docker-deployment)
+- [Environment Variables](#-environment-variables)
+- [Contributing](#-contributing)
+
+---
+
+## Overview
+
+A comprehensive SaaS platform for financial modeling, valuation analysis, and deal execution. Built with **Python/FastAPI backend**, **React/TypeScript frontend**, and **Excel Add-in integration**.
+
+### Key Highlights
+
+| Metric | Value |
+|--------|-------|
+| **Total Lines of Code** | 45,076 |
+| **Backend Files** | 80 Python files (21,313 LOC) |
+| **Frontend Files** | 67 TypeScript files (20,610 LOC) |
+| **Excel Add-in** | 11 TypeScript files (3,128 LOC) |
+| **Test Coverage** | 196 tests passing |
+| **API Endpoints** | 50+ REST endpoints |
+| **Financial Models** | 11 model types |
+| **AI Components** | 6 AI-powered features |
+
+---
+
+## Architecture
+
+### System Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              SYSTEM ARCHITECTURE                                         │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│   ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────────────────────────┐ │
+│   │   WEB CLIENT    │    │  EXCEL ADD-IN   │    │           MOBILE (Future)           │ │
+│   │   React 18 +    │    │   Office.js +   │    │                                     │ │
+│   │   TypeScript    │    │   React        │    │                                     │ │
+│   └────────┬────────┘    └────────┬────────┘    └─────────────────────────────────────┘ │
+│            │                      │                                                      │
+│            └──────────┬───────────┘                                                      │
+│                       │                                                                  │
+│                       ▼                                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────────────────┐   │
+│   │                           API GATEWAY / LOAD BALANCER                            │   │
+│   │                         (nginx / AWS ALB / CloudFlare)                           │   │
+│   └─────────────────────────────────────────────────────────────────────────────────┘   │
+│                       │                                                                  │
+│                       ▼                                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────────────────┐   │
+│   │                              FASTAPI BACKEND                                     │   │
+│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │   │
+│   │  │  REST API    │  │  WebSocket   │  │  Background  │  │     Middleware       │ │   │
+│   │  │  Endpoints   │  │   Manager    │  │    Tasks     │  │  - Rate Limiting     │ │   │
+│   │  │  - Auth      │  │  - Presence  │  │  - PDF Gen   │  │  - Request Logging   │ │   │
+│   │  │  - Models    │  │  - Sync      │  │  - PPTX Gen  │  │  - Error Handling    │ │   │
+│   │  │  - Valuation │  │  - Comments  │  │  - Email     │  │  - CORS              │ │   │
+│   │  │  - Export    │  │  - Locks     │  │              │  │                      │ │   │
+│   │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────────────┘ │   │
+│   │                                                                                  │   │
+│   │  ┌─────────────────────────────────────────────────────────────────────────────┐│   │
+│   │  │                      FINANCIAL CALCULATION ENGINE                            ││   │
+│   │  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐               ││   │
+│   │  │  │ Base Model │ │ Calc Graph │ │  Scenario  │ │ Sensitivity │               ││   │
+│   │  │  │ (Abstract) │ │    DAG     │ │  Manager   │ │  Analysis   │               ││   │
+│   │  │  └────────────┘ └────────────┘ └────────────┘ └────────────┘               ││   │
+│   │  │                                                                              ││   │
+│   │  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐               ││   │
+│   │  │  │    LBO     │ │   DCF      │ │   Merger   │ │ 3-Statement │               ││   │
+│   │  │  │   Model    │ │  Model     │ │   Model    │ │   Model     │               ││   │
+│   │  │  └────────────┘ └────────────┘ └────────────┘ └────────────┘               ││   │
+│   │  │                                                                              ││   │
+│   │  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐               ││   │
+│   │  │  │ Operating  │ │  13-Week   │ │   REIT     │ │    NAV      │               ││   │
+│   │  │  │   Model    │ │  Cash Flow │ │   Model    │ │   Model     │               ││   │
+│   │  │  └────────────┘ └────────────┘ └────────────┘ └────────────┘               ││   │
+│   │  │                                                                              ││   │
+│   │  │  ┌────────────┐ ┌────────────┐ ┌────────────┐                               ││   │
+│   │  │  │   Spinoff  │ │    IP      │ │    RMT     │                               ││   │
+│   │  │  │   Model    │ │ Licensing  │ │   Model    │                               ││   │
+│   │  │  └────────────┘ └────────────┘ └────────────┘                               ││   │
+│   │  └─────────────────────────────────────────────────────────────────────────────┘│   │
+│   └─────────────────────────────────────────────────────────────────────────────────┘   │
+│                       │                                                                  │
+│                       ▼                                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────────────────┐   │
+│   │                              DATA LAYER                                          │   │
+│   │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐               │   │
+│   │  │   PostgreSQL     │  │      Redis       │  │   S3 / MinIO     │               │   │
+│   │  │   - Users        │  │   - Sessions     │  │   - Exports      │               │   │
+│   │  │   - Models       │  │   - Cache        │  │   - Snapshots    │               │   │
+│   │  │   - Cells        │  │   - Pub/Sub      │  │   - Templates    │               │   │
+│   │  │   - Comments     │  │   - Rate Limits  │  │                  │               │   │
+│   │  │   - Versions     │  │                  │  │                  │               │   │
+│   │  └──────────────────┘  └──────────────────┘  └──────────────────┘               │   │
+│   └─────────────────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow Diagram
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                               DATA FLOW ARCHITECTURE                                  │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   USER INPUT                  PROCESSING                         OUTPUT              │
+│   ──────────                  ──────────                         ──────              │
+│                                                                                       │
+│   ┌─────────┐                ┌─────────────┐                    ┌─────────────┐      │
+│   │ Web UI  │──────────────▶│   API       │──────────────────▶│  Dashboard  │      │
+│   │ Input   │                │   Gateway   │                    │  Display    │      │
+│   └─────────┘                └──────┬──────┘                    └─────────────┘      │
+│                                     │                                                 │
+│   ┌─────────┐                       ▼                           ┌─────────────┐      │
+│   │ Excel   │──────────────▶┌─────────────┐──────────────────▶│  Excel      │      │
+│   │ Add-in  │                │ Calculation │                    │  Results    │      │
+│   └─────────┘                │   Engine    │                    └─────────────┘      │
+│                              └──────┬──────┘                                          │
+│                                     │                                                 │
+│                                     ▼                                                 │
+│                              ┌─────────────┐                    ┌─────────────┐      │
+│                              │  Financial  │──────────────────▶│  Reports    │      │
+│                              │   Models    │                    │  PDF/PPTX   │      │
+│                              └──────┬──────┘                    └─────────────┘      │
+│                                     │                                                 │
+│                                     ▼                                                 │
+│                              ┌─────────────┐                    ┌─────────────┐      │
+│                              │  Database   │──────────────────▶│  Version    │      │
+│                              │  Storage    │                    │  History    │      │
+│                              └─────────────┘                    └─────────────┘      │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Component Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND ARCHITECTURE                                    │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                              App.tsx (Root)                                  │    │
+│   │                         ErrorBoundary + Providers                            │    │
+│   └────────────────────────────────────┬────────────────────────────────────────┘    │
+│                                        │                                              │
+│          ┌─────────────────────────────┼─────────────────────────────┐               │
+│          │                             │                             │               │
+│          ▼                             ▼                             ▼               │
+│   ┌─────────────┐              ┌─────────────┐              ┌─────────────┐          │
+│   │ PublicLayout│              │  AppLayout  │              │ Auth Pages  │          │
+│   │ (Marketing) │              │ (Dashboard) │              │ Login/Reg   │          │
+│   └──────┬──────┘              └──────┬──────┘              └─────────────┘          │
+│          │                            │                                               │
+│          ▼                            ▼                                               │
+│   ┌─────────────────┐   ┌────────────────────────────────────────────────────┐       │
+│   │ Public Pages    │   │                 Feature Modules                     │       │
+│   │ - Home          │   │  ┌──────────┐ ┌──────────┐ ┌──────────┐            │       │
+│   │ - Features      │   │  │Dashboard │ │  Model   │ │Valuation │            │       │
+│   │ - Pricing       │   │  │  Page    │ │ Builder  │ │  Suite   │            │       │
+│   │ - About         │   │  └──────────┘ └──────────┘ └──────────┘            │       │
+│   │ - Docs          │   │                                                     │       │
+│   │ - Blog          │   │  ┌──────────┐ ┌──────────┐ ┌──────────┐            │       │
+│   │ - Careers       │   │  │   Deal   │ │   Due    │ │ Industry │            │       │
+│   │ - Help          │   │  │ Analysis │ │Diligence │ │  Models  │            │       │
+│   │ - etc.          │   │  └──────────┘ └──────────┘ └──────────┘            │       │
+│   └─────────────────┘   └────────────────────────────────────────────────────┘       │
+│                                        │                                              │
+│                                        ▼                                              │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                          Shared Components                                   │    │
+│   │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐                │    │
+│   │  │     AI     │ │    UI      │ │   Charts   │ │   Layout   │                │    │
+│   │  │ Components │ │ Components │ │ Components │ │ Components │                │    │
+│   │  └────────────┘ └────────────┘ └────────────┘ └────────────┘                │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                        │                                              │
+│                                        ▼                                              │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                           State Management                                   │    │
+│   │        Redux Toolkit (Models, Auth)    +    Zustand (UI State)              │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## Features
 
 ### Financial Models
-- **3-Statement Models** - Integrated Income Statement, Balance Sheet, Cash Flow
-- **Operating Models** - Revenue build, cost structure, margin analysis
-- **13-Week Cash Flow** - Short-term liquidity forecasting
-- **LBO Models** - Leveraged buyout with IRR/MOIC calculations
-- **Merger Models** - M&A accretion/dilution analysis
-- **Industry-Specific** - Sale-leaseback, REIT conversion, NAV models
-- **Bespoke Transactions** - Spin-off/carve-out, IP licensing, Reverse Morris Trust
-- **Due Diligence** - Vertical-specific workflows, findings tracker, risk matrix, QoE analysis
 
-### Valuation Analysis
-- **DCF Valuation** - Discounted cash flow with WACC build
-- **Trading Comps** - Comparable company analysis
-- **Precedent Transactions** - Historical deal multiples
-- **Football Field** - Visual valuation summary
+| Model Type | Description | Key Outputs |
+|------------|-------------|-------------|
+| **3-Statement Model** | Integrated IS/BS/CF with circular references | Revenue, Net Income, Cash Flow, ROIC |
+| **Operating Model** | Revenue build with product lines & cost drivers | Unit economics, Margins, Headcount |
+| **13-Week Cash Flow** | Short-term liquidity forecasting | Weekly cash, Revolver usage, Minimum cash |
+| **LBO Model** | Leveraged buyout analysis | IRR, MOIC, Sources/Uses, Debt schedule |
+| **Merger Model** | M&A accretion/dilution analysis | EPS impact, Synergies, Contribution |
+| **DCF Model** | Discounted cash flow valuation | Enterprise value, Equity value, WACC |
+| **Trading Comps** | Comparable company analysis | EV/EBITDA, P/E, Percentiles |
+| **Precedent Transactions** | Historical deal multiples | Transaction premiums, Deal metrics |
+| **Sale-Leaseback** | Real estate transaction analysis | Rent coverage, NPV, Cap rates |
+| **REIT Model** | REIT valuation & metrics | FFO/AFFO, Dividend yield, NAV |
+| **NAV Model** | Sum-of-the-parts valuation | GAV, NAV per share, Discount analysis |
+
+### Bespoke Transactions
+
+| Transaction Type | Description | Key Analysis |
+|------------------|-------------|--------------|
+| **Spin-Off/Carve-Out** | Corporate separation analysis | Value creation, Stranded costs, TSA |
+| **IP Licensing** | Intellectual property deals | Royalty streams, NPV, Milestone payments |
+| **Reverse Morris Trust** | Tax-efficient spin-merger | Tax savings, Ownership, Accretion/dilution |
 
 ### Platform Capabilities
-- **User Authentication** - JWT-based authentication with role-based access
-- **Real-time Collaboration** - WebSocket-based multi-user editing with presence awareness
-- **Comments & Annotations** - Threaded comments on cells with resolution tracking
-- **Cell Locking** - Prevent edit conflicts with automatic cell-level locks
-- **Scenario Management** - Base, Bull, Bear, Management cases
-- **Version Control** - Git-like model versioning
-- **Role-Based Access** - Analyst, Stakeholder, Admin roles
-- **Excel Integration** - Full Office.js add-in with custom functions
-- **Export** - PDF and PowerPoint generation
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Backend | Python 3.11+, FastAPI, SQLAlchemy |
-| Database | PostgreSQL 14+, Redis |
-| Auth | JWT (python-jose), bcrypt |
-| Migrations | Alembic |
-| Real-time | WebSocket (native) |
-| Frontend | React 18, TypeScript, Redux Toolkit |
-| UI Components | AG Grid, Recharts, Visx |
-| Excel | Office.js Add-in |
-
-## Project Structure
 
 ```
-micro1/
-├── backend/                    # Python FastAPI backend
-│   ├── app/                    # Application config
-│   │   ├── main.py            # FastAPI entry point
-│   │   ├── config.py          # Settings management
-│   │   └── dependencies.py    # Auth dependencies
-│   ├── api/v1/                # REST API endpoints
-│   │   ├── auth/              # Authentication endpoints
-│   │   ├── collaboration/     # WebSocket & comments
-│   │   ├── models/            # Financial model CRUD
-│   │   ├── valuations/        # DCF, Comps, Precedents
-│   │   ├── deals/             # LBO, M&A analysis
-│   │   ├── exports/           # PDF and PowerPoint export
-│   │   ├── excel/             # Excel add-in sync API
-│   │   ├── industry/          # Industry-specific models
-│   │   ├── bespoke/           # Bespoke transaction models
-│   │   └── due_diligence/     # Due diligence workflows
-│   ├── core/                  # Business logic
-│   │   ├── engine/            # Calculation engine
-│   │   │   ├── base_model.py  # Abstract financial model
-│   │   │   ├── calculation_graph.py  # Dependency DAG
-│   │   │   └── scenario_manager.py  # Scenario management
-│   │   └── models/            # Model implementations
-│   │       ├── lbo_model.py   # LBO with returns
-│   │       ├── three_statement.py  # 3-statement model
-│   │       ├── operating_model.py  # Operating model
-│   │       ├── cash_flow_13week.py  # 13-week cash flow
-│   │       ├── sale_leaseback.py  # Sale-leaseback transactions
-│   │       ├── reit_model.py  # REIT valuation
-│   │       ├── nav_model.py  # NAV/sum-of-the-parts
-│   │       ├── spinoff_model.py  # Spin-off/carve-out
-│   │       ├── ip_licensing_model.py  # IP licensing
-│   │       ├── rmt_model.py  # Reverse Morris Trust
-│   │       └── due_diligence.py  # Due diligence workflows
-│   ├── db/models/             # SQLAlchemy models
-│   ├── alembic/               # Database migrations
-│   ├── services/              # Business services
-│   │   ├── auth_service.py    # Authentication logic
-│   │   ├── model_service.py   # Model CRUD operations
-│   │   ├── websocket_manager.py  # WebSocket connections
-│   │   ├── collaboration_service.py  # Comments/annotations
-│   │   ├── pdf_service.py     # PDF report generation
-│   │   ├── pptx_service.py    # PowerPoint generation
-│   │   └── report_templates.py  # Template management
-│   ├── middleware/            # Production middleware
-│   │   ├── rate_limiter.py    # Rate limiting
-│   │   ├── request_logger.py  # Request logging
-│   │   └── error_handler.py   # Error handling
-│   └── tests/                 # pytest test suite
-│
-├── frontend/                   # React TypeScript frontend
-│   ├── src/
-│   │   ├── app/               # App configuration
-│   │   │   ├── store/         # Redux Toolkit
-│   │   │   └── providers/     # RBAC, WebSocket
-│   │   ├── features/          # Feature modules
-│   │   │   ├── dashboard/     # Executive dashboard
-│   │   │   ├── model-builder/ # Analyst interface
-│   │   │   ├── deal-analysis/ # LBO analysis
-│   │   │   ├── valuation/     # Valuation suite
-│   │   │   └── due-diligence/ # Due diligence workflow
-│   │   │       ├── DueDiligence.tsx      # Main DD page
-│   │   │       ├── types.ts              # DD types
-│   │   │       ├── services/             # API service
-│   │   │       └── components/           # DD components
-│   │   │           ├── FindingsTracker.tsx
-│   │   │           ├── RiskMatrix.tsx
-│   │   │           ├── QoECalculator.tsx
-│   │   │           ├── DDChecklist.tsx
-│   │   │           └── DDSummary.tsx
-│   │   └── shared/            # Shared components
-│   └── package.json
-│
-└── excel-addin/               # Office.js Excel Add-in
-    ├── src/
-    │   ├── functions/         # Custom functions (UDFs)
-    │   │   └── platformFunctions.ts  # FP.GET, FP.LINK, FP.LIVE, etc.
-    │   ├── sync/              # Sync engine
-    │   │   └── SyncEngine.ts  # WebSocket sync with conflict resolution
-    │   ├── offline/           # Offline storage
-    │   │   └── IndexedDBStore.ts  # IndexedDB for offline support
-    │   └── taskpane/          # Task pane UI
-    │       ├── components/    # React components
-    │       │   ├── App.tsx    # Main app component
-    │       │   ├── Header.tsx # Header with status
-    │       │   ├── LoginDialog.tsx  # Authentication dialog
-    │       │   └── tabs/      # Tab components
-    │       │       ├── HomeTab.tsx
-    │       │       ├── LinksTab.tsx
-    │       │       ├── SyncTab.tsx
-    │       │       └── SettingsTab.tsx
-    │       └── index.tsx      # Entry point
-    └── manifest.xml
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                              PLATFORM CAPABILITIES                                    │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   AUTHENTICATION           COLLABORATION              VERSION CONTROL                │
+│   ──────────────           ─────────────              ───────────────                │
+│   ✓ JWT-based auth         ✓ Real-time sync          ✓ Git-like versioning          │
+│   ✓ Role-based access      ✓ User presence           ✓ Branch/scenario mgmt         │
+│   ✓ Password encryption    ✓ Cell locking            ✓ Audit trail                  │
+│   ✓ Token refresh          ✓ Comments/annotations    ✓ Rollback support             │
+│                                                                                       │
+│   EXPORT                   DUE DILIGENCE             EXCEL INTEGRATION              │
+│   ──────                   ─────────────             ─────────────────              │
+│   ✓ PDF reports            ✓ Vertical checklists    ✓ Custom functions (UDFs)      │
+│   ✓ PowerPoint decks       ✓ Findings tracker       ✓ Bidirectional sync           │
+│   ✓ Custom templates       ✓ Risk matrix            ✓ Offline support              │
+│   ✓ Chart embedding        ✓ QoE analysis           ✓ Streaming data               │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### User Roles
+
+| Role | Permissions | Use Case |
+|------|-------------|----------|
+| **Analyst** | Create, edit, delete models; manage scenarios; full model access | Investment analysts, associates |
+| **Stakeholder** | View models and dashboards; add comments | Executives, clients, board members |
+| **Admin** | Full access + user management | Platform administrators |
+
+---
+
+## AI-Powered Features
+
+The platform includes 6 AI-powered components for intelligent financial analysis.
+
+### AI Components Overview
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                              AI-POWERED FEATURES                                      │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                         AI Chat Assistant                                    │    │
+│   │   Location: Dashboard (floating button)                                      │    │
+│   │   Purpose: Natural language Q&A for financial modeling guidance              │    │
+│   │   Features:                                                                  │    │
+│   │     • DCF modeling help and formulas                                         │    │
+│   │     • LBO structuring advice                                                 │    │
+│   │     • WACC calculation guidance                                              │    │
+│   │     • Valuation multiple explanations                                        │    │
+│   │     • Industry-specific assumptions                                          │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                         AI Insights Panel                                    │    │
+│   │   Location: Dashboard (right sidebar)                                        │    │
+│   │   Purpose: Automated analysis and recommendations across models              │    │
+│   │   Insight Types:                                                             │    │
+│   │     • Opportunity - Valuation upside potential                               │    │
+│   │     • Risk - Leverage ratio concerns, anomalies                              │    │
+│   │     • Recommendation - Model optimization suggestions                        │    │
+│   │     • Trend - Market multiple changes                                        │    │
+│   │     • Anomaly - Working capital deviations                                   │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                       AI Scenario Generator                                  │    │
+│   │   Location: Model Builder (toolbar button)                                   │    │
+│   │   Purpose: Generate Bull/Base/Bear/Stress scenarios automatically            │    │
+│   │   Features:                                                                  │    │
+│   │     • Industry-aware scenario generation                                     │    │
+│   │     • Probability weighting (25%/50%/20%/5%)                                 │    │
+│   │     • Detailed reasoning for each scenario                                   │    │
+│   │     • One-click apply to model                                               │    │
+│   │     • Assumptions: revenue growth, EBITDA margin, exit multiple              │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                      AI Assumptions Helper                                   │    │
+│   │   Location: Model Builder (toolbar button)                                   │    │
+│   │   Purpose: Industry benchmark suggestions for model assumptions              │    │
+│   │   Supported Industries:                                                      │    │
+│   │     • Technology, Healthcare, Manufacturing, Retail, Financial               │    │
+│   │   Assumptions Provided:                                                      │    │
+│   │     • Revenue growth rate (with min/max/median)                              │    │
+│   │     • EBITDA margin benchmarks                                               │    │
+│   │     • CapEx as % of revenue                                                  │    │
+│   │     • Working capital requirements                                           │    │
+│   │     • Terminal growth rate                                                   │    │
+│   │     • WACC with confidence levels                                            │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                        AI Comps Finder                                       │    │
+│   │   Location: Valuation Suite                                                  │    │
+│   │   Purpose: Find and rank comparable companies automatically                  │    │
+│   │   Features:                                                                  │    │
+│   │     • Relevance scoring (0-100%)                                             │    │
+│   │     • Multiple metrics: EV/Revenue, EV/EBITDA, P/E                           │    │
+│   │     • Reasoning for each comparable                                          │    │
+│   │     • Revenue growth and margin comparisons                                  │    │
+│   │     • Market cap matching                                                    │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                        AI Risk Analyzer                                      │    │
+│   │   Location: Due Diligence                                                    │    │
+│   │   Purpose: Analyze DD findings and generate risk assessment                  │    │
+│   │   Outputs:                                                                   │    │
+│   │     • Overall risk score (0-100)                                             │    │
+│   │     • Risk categorization (low/medium/high/critical)                         │    │
+│   │     • Individual risk breakdown with mitigation                              │    │
+│   │     • Deal recommendations                                                   │    │
+│   │     • Integration risk assessment                                            │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### AI Service Types
+
+```typescript
+// AI Message for Chat Assistant
+interface AIMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: Date;
+}
+
+// AI Scenario for Scenario Generator
+interface AIScenario {
+  id: string;
+  name: string;
+  type: 'bull' | 'base' | 'bear' | 'stress';
+  description: string;
+  assumptions: Record<string, number>;
+  reasoning: string;
+  probability: number;  // 0.25, 0.50, 0.20, 0.05
+}
+
+// AI Insight for Insights Panel
+interface AIInsight {
+  id: string;
+  type: 'opportunity' | 'risk' | 'recommendation' | 'trend' | 'anomaly';
+  title: string;
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+  confidence: number;
+  relatedModel?: string;
+  actionItems?: string[];
+  metrics?: Record<string, number>;
+}
+
+// AI Comparable for Comps Finder
+interface AIComparable {
+  id: string;
+  name: string;
+  ticker: string;
+  industry: string;
+  marketCap: number;
+  evRevenue: number;
+  evEbitda: number;
+  relevanceScore: number;  // 0-1
+  reasoning: string;
+}
+
+// AI Risk Assessment for Risk Analyzer
+interface AIRiskAssessment {
+  overallScore: number;
+  category: 'low' | 'medium' | 'high' | 'critical';
+  risks: Array<{
+    title: string;
+    category: string;
+    severity: string;
+    likelihood: string;
+    impact: string;
+    mitigation: string;
+  }>;
+  summary: string;
+  recommendations: string[];
+}
+```
+
+### AI Feature Locations
+
+| Feature | Page | Access | Trigger |
+|---------|------|--------|---------|
+| AI Chat Assistant | Dashboard | Floating button (bottom-right) | Click chat icon |
+| AI Insights Panel | Dashboard | Right sidebar | Automatic on load |
+| AI Scenario Generator | Model Builder | Toolbar button "AI Scenarios" | Click button |
+| AI Assumptions Helper | Model Builder | Toolbar button "AI Assumptions" | Click button |
+| AI Comps Finder | Valuation Suite | Tab "AI Comps" | Switch to tab |
+| AI Risk Analyzer | Due Diligence | Tab "AI Analysis" | Switch to tab |
+
+---
 
 ## Quick Start
 
@@ -149,29 +454,42 @@ micro1/
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL 14+
-- Docker (optional, for PostgreSQL)
+- Redis 7+
+- Docker (optional)
 
-### Database Setup
+### Installation
+
+#### 1. Clone Repository
+
+```bash
+git clone https://github.com/your-org/financial-modeling-platform.git
+cd financial-modeling-platform
+```
+
+#### 2. Database Setup
 
 ```bash
 # Using Docker
 docker run -d \
   --name finmodel-postgres \
   -e POSTGRES_PASSWORD=yourpassword \
+  -e POSTGRES_DB=finmodel \
   -p 5432:5432 \
   postgres:14
 
-# Create database
-docker exec -it finmodel-postgres psql -U postgres -c "CREATE DATABASE finmodel;"
+# Using Docker for Redis
+docker run -d \
+  --name finmodel-redis \
+  -p 6379:6379 \
+  redis:7
 ```
 
-### Backend Setup
+#### 3. Backend Setup
 
 ```bash
-# Navigate to backend
 cd backend
 
-# Create virtual environment (recommended)
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # or: venv\Scripts\activate  # Windows
@@ -181,422 +499,728 @@ pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your database credentials
+# Edit .env with your credentials
 
-# Run database migrations
+# Run migrations
 alembic upgrade head
 
-# Run development server
+# Start backend server
 uvicorn app.main:app --reload --port 8001
 ```
 
-### Frontend Setup
+#### 4. Frontend Setup
 
 ```bash
-# Navigate to frontend
 cd frontend
 
 # Install dependencies
 npm install
 
-# Run development server
+# Start development server
 npm run dev
 ```
 
-### Access the Application
+#### 5. Access Application
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8001
-- **API Docs**: http://localhost:8001/docs
-- **WebSocket**: ws://localhost:8001/ws/models/{model_id}
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8001 |
+| API Documentation (Swagger) | http://localhost:8001/docs |
+| API Documentation (ReDoc) | http://localhost:8001/redoc |
+| WebSocket | ws://localhost:8001/ws/models/{id} |
 
-## Docker Deployment
+---
 
-### Quick Start with Docker Compose
-
-```bash
-# Clone and navigate to project
-cd micro1
-
-# Copy environment file and configure
-cp .env.example .env
-# Edit .env with your settings
-
-# Start all services (PostgreSQL, Redis, Backend, Frontend)
-docker-compose up -d
-
-# Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-```
-
-### Development Mode
-
-```bash
-# Start with hot-reload enabled
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-
-# This includes:
-# - Backend with uvicorn --reload
-# - Frontend with Vite dev server
-# - pgAdmin at http://localhost:5050
-# - Redis Commander at http://localhost:8081
-```
-
-### Production Mode
-
-```bash
-# Start with production settings
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# This includes:
-# - Optimized builds
-# - Resource limits
-# - Multiple replicas
-# - Required environment variables validation
-```
-
-### Individual Services
-
-```bash
-# Build backend only
-docker build -t fmp-backend ./backend
-
-# Build frontend only
-docker build -t fmp-frontend ./frontend
-
-# Run backend with custom database
-docker run -d \
-  --name fmp-backend \
-  -e DATABASE_URL=postgresql://user:pass@host:5432/db \
-  -e REDIS_URL=redis://host:6379/0 \
-  -p 8001:8001 \
-  fmp-backend
-```
-
-### Environment Configuration
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `POSTGRES_USER` | fmp_user | PostgreSQL username |
-| `POSTGRES_PASSWORD` | fmp_password | PostgreSQL password |
-| `POSTGRES_DB` | financial_platform | Database name |
-| `REDIS_URL` | redis://redis:6379/0 | Redis connection URL |
-| `SECRET_KEY` | (required in prod) | JWT signing key |
-| `VITE_API_URL` | http://localhost:8001 | Backend API URL for frontend |
-| `VITE_WS_URL` | ws://localhost:8001 | WebSocket URL for frontend |
-| `BACKEND_TARGET` | production | Docker build target (production/development) |
-| `FRONTEND_TARGET` | production | Docker build target (production/development) |
-
-### Docker Architecture
+## Project Structure
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Docker Network (fmp-network)            │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   ┌──────────┐    ┌──────────┐    ┌──────────────────────┐ │
-│   │ Frontend │◄──►│ Backend  │◄──►│ PostgreSQL + Redis   │ │
-│   │ (nginx)  │    │ (FastAPI)│    │                      │ │
-│   │ :3000    │    │ :8001    │    │ :5432      :6379     │ │
-│   └──────────┘    └──────────┘    └──────────────────────┘ │
-│                                                             │
-│   Optional:                                                 │
-│   ┌──────────┐    ┌──────────────┐    ┌────────────────┐   │
-│   │ MinIO    │    │ pgAdmin      │    │ Redis Commander│   │
-│   │ :9000    │    │ :5050        │    │ :8081          │   │
-│   └──────────┘    └──────────────┘    └────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+micro1/
+├── backend/                          # Python FastAPI Backend
+│   ├── app/                          # Application Core
+│   │   ├── main.py                   # FastAPI entry point with middleware
+│   │   ├── config.py                 # Pydantic settings management
+│   │   └── dependencies.py           # Auth dependencies (get_current_user)
+│   │
+│   ├── api/v1/                       # REST API Endpoints
+│   │   ├── router.py                 # Route aggregation
+│   │   ├── auth/                     # Authentication (login, register, refresh)
+│   │   ├── models/                   # Financial model CRUD
+│   │   ├── collaboration/            # WebSocket, comments, presence
+│   │   ├── valuations/               # DCF, Comps, Precedents
+│   │   ├── deals/                    # LBO, Merger analysis
+│   │   ├── exports/                  # PDF, PPTX generation
+│   │   ├── excel/                    # Excel add-in API
+│   │   ├── industry/                 # Sale-leaseback, REIT, NAV
+│   │   ├── bespoke/                  # Spinoff, IP licensing, RMT
+│   │   └── due_diligence/            # DD workflows
+│   │
+│   ├── core/                         # Business Logic
+│   │   ├── engine/                   # Calculation Engine
+│   │   │   ├── base_model.py         # Abstract BaseFinancialModel
+│   │   │   ├── calculation_graph.py  # Dependency DAG
+│   │   │   └── scenario_manager.py   # Scenario management
+│   │   │
+│   │   └── models/                   # Financial Model Implementations
+│   │       ├── lbo_model.py          # LBO with IRR/MOIC
+│   │       ├── three_statement.py    # 3-Statement model
+│   │       ├── operating_model.py    # Operating model
+│   │       ├── cash_flow_13week.py   # 13-week cash flow
+│   │       ├── sale_leaseback.py     # Sale-leaseback
+│   │       ├── reit_model.py         # REIT valuation
+│   │       ├── nav_model.py          # NAV model
+│   │       ├── spinoff_model.py      # Spin-off/carve-out
+│   │       ├── ip_licensing_model.py # IP licensing
+│   │       ├── rmt_model.py          # Reverse Morris Trust
+│   │       └── due_diligence.py      # DD workflows
+│   │
+│   ├── services/                     # Business Services
+│   │   ├── auth_service.py           # Authentication logic
+│   │   ├── model_service.py          # Model CRUD operations
+│   │   ├── websocket_manager.py      # WebSocket connection manager
+│   │   ├── collaboration_service.py  # Comments/annotations
+│   │   ├── pdf_service.py            # PDF report generation
+│   │   ├── pptx_service.py           # PowerPoint generation
+│   │   └── report_templates.py       # Template management
+│   │
+│   ├── middleware/                   # Production Middleware
+│   │   ├── rate_limiter.py           # Token bucket rate limiting
+│   │   ├── request_logger.py         # Request logging with timing
+│   │   └── error_handler.py          # Global error handling
+│   │
+│   ├── db/                           # Database Layer
+│   │   └── models/                   # SQLAlchemy models
+│   │       ├── user.py               # User model
+│   │       ├── financial_model.py    # Model, Sheet, Cell
+│   │       └── collaboration.py      # Comments, Annotations
+│   │
+│   ├── alembic/                      # Database Migrations
+│   │   └── versions/                 # Migration files
+│   │
+│   └── tests/                        # Test Suite (196 tests)
+│       ├── test_lbo_model.py         # LBO model tests
+│       ├── test_auth.py              # Authentication tests
+│       ├── test_websocket.py         # WebSocket tests
+│       ├── test_financial_models.py  # Financial model tests
+│       ├── test_export.py            # Export tests
+│       ├── test_excel_api.py         # Excel API tests
+│       ├── test_industry_models.py   # Industry model tests
+│       ├── test_bespoke_models.py    # Bespoke transaction tests
+│       ├── test_due_diligence.py     # Due diligence tests
+│       └── test_production.py        # Production middleware tests
+│
+├── frontend/                         # React TypeScript Frontend
+│   ├── src/
+│   │   ├── App.tsx                   # Root component with routes
+│   │   ├── main.tsx                  # Entry point
+│   │   │
+│   │   ├── app/                      # App Configuration
+│   │   │   ├── store/                # Redux Toolkit
+│   │   │   │   ├── index.ts          # Store configuration
+│   │   │   │   └── slices/           # Redux slices
+│   │   │   │       ├── authSlice.ts
+│   │   │   │       ├── modelsSlice.ts
+│   │   │   │       └── collaborationSlice.ts
+│   │   │   │
+│   │   │   └── providers/            # React Context Providers
+│   │   │       ├── role-provider.tsx       # RBAC provider
+│   │   │       └── websocket-provider.tsx  # WebSocket provider
+│   │   │
+│   │   ├── features/                 # Feature Modules
+│   │   │   ├── dashboard/            # Executive Dashboard
+│   │   │   │   └── Dashboard.tsx
+│   │   │   │
+│   │   │   ├── model-builder/        # Model Builder (AG Grid)
+│   │   │   │   └── ModelBuilder.tsx
+│   │   │   │
+│   │   │   ├── deal-analysis/        # Deal Analysis
+│   │   │   │   ├── LBOAnalysis.tsx
+│   │   │   │   └── MergerAnalysis.tsx
+│   │   │   │
+│   │   │   ├── valuation/            # Valuation Suite
+│   │   │   │   └── ValuationSuite.tsx
+│   │   │   │
+│   │   │   ├── due-diligence/        # Due Diligence
+│   │   │   │   ├── DueDiligence.tsx
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── FindingsTracker.tsx
+│   │   │   │   │   ├── RiskMatrix.tsx
+│   │   │   │   │   ├── QoECalculator.tsx
+│   │   │   │   │   ├── DDChecklist.tsx
+│   │   │   │   │   └── DDSummary.tsx
+│   │   │   │   └── services/
+│   │   │   │
+│   │   │   ├── industry/             # Industry-Specific Models
+│   │   │   │   ├── SaleLeasebackPage.tsx
+│   │   │   │   ├── REITAnalysisPage.tsx
+│   │   │   │   └── NAVAnalysisPage.tsx
+│   │   │   │
+│   │   │   ├── export/               # Export Module
+│   │   │   │   └── ExportPage.tsx
+│   │   │   │
+│   │   │   ├── auth/                 # Authentication
+│   │   │   │   ├── LoginPage.tsx
+│   │   │   │   └── RegisterPage.tsx
+│   │   │   │
+│   │   │   ├── public/               # Public Marketing Pages
+│   │   │   │   ├── HomePage.tsx
+│   │   │   │   ├── FeaturesPage.tsx
+│   │   │   │   ├── PricingPage.tsx
+│   │   │   │   ├── AboutPage.tsx
+│   │   │   │   ├── DocsPage.tsx
+│   │   │   │   ├── BlogPage.tsx
+│   │   │   │   └── ... (18 public pages)
+│   │   │   │
+│   │   │   ├── settings/             # User Settings
+│   │   │   │   └── SettingsPage.tsx
+│   │   │   │
+│   │   │   └── notifications/        # Notifications
+│   │   │       └── NotificationsPage.tsx
+│   │   │
+│   │   ├── shared/                   # Shared Components
+│   │   │   ├── components/
+│   │   │   │   ├── ai/               # AI Components (6)
+│   │   │   │   │   ├── AIChatAssistant.tsx
+│   │   │   │   │   ├── AIInsightsPanel.tsx
+│   │   │   │   │   ├── AIScenarioGenerator.tsx
+│   │   │   │   │   ├── AIAssumptionsHelper.tsx
+│   │   │   │   │   ├── AICompsFinder.tsx
+│   │   │   │   │   └── AIRiskAnalyzer.tsx
+│   │   │   │   │
+│   │   │   │   ├── layout/           # Layout Components
+│   │   │   │   │   ├── AppLayout.tsx
+│   │   │   │   │   └── PublicLayout.tsx
+│   │   │   │   │
+│   │   │   │   ├── errors/           # Error Components
+│   │   │   │   │   ├── ErrorBoundary.tsx
+│   │   │   │   │   ├── NotFoundPage.tsx
+│   │   │   │   │   └── ServerErrorPage.tsx
+│   │   │   │   │
+│   │   │   │   └── ui/               # UI Components
+│   │   │   │
+│   │   │   └── hooks/                # Custom Hooks
+│   │   │
+│   │   └── services/                 # Frontend Services
+│   │       └── aiService.ts          # AI Service Layer
+│   │
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   └── tsconfig.json
+│
+├── excel-addin/                      # Office.js Excel Add-in
+│   ├── src/
+│   │   ├── functions/                # Custom Functions (UDFs)
+│   │   │   └── platformFunctions.ts  # FP.GET, FP.LINK, FP.LIVE, etc.
+│   │   │
+│   │   ├── sync/                     # Sync Engine
+│   │   │   └── SyncEngine.ts         # WebSocket sync with conflict resolution
+│   │   │
+│   │   ├── offline/                  # Offline Support
+│   │   │   └── IndexedDBStore.ts     # IndexedDB for offline storage
+│   │   │
+│   │   └── taskpane/                 # Task Pane UI
+│   │       ├── components/
+│   │       │   ├── App.tsx
+│   │       │   ├── Header.tsx
+│   │       │   ├── LoginDialog.tsx
+│   │       │   └── tabs/
+│   │       │       ├── HomeTab.tsx
+│   │       │       ├── LinksTab.tsx
+│   │       │       ├── SyncTab.tsx
+│   │       │       └── SettingsTab.tsx
+│   │       └── index.tsx
+│   │
+│   ├── manifest.xml                  # Office Add-in manifest
+│   └── package.json
+│
+├── docker-compose.yml                # Docker orchestration
+├── docker-compose.dev.yml            # Development overrides
+├── docker-compose.prod.yml           # Production overrides
+├── .env.example                      # Environment template
+└── README.md                         # This file
 ```
 
-### Health Checks
+---
 
-All services include health checks:
+## Financial Models
 
-```bash
-# Backend health
-curl http://localhost:8001/health
+### Calculation Engine Architecture
 
-# Frontend health
-curl http://localhost:3000/health
-
-# Docker health status
-docker-compose ps
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                          CALCULATION ENGINE ARCHITECTURE                              │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                         BaseFinancialModel (Abstract)                        │    │
+│   │                                                                              │    │
+│   │   Methods:                                                                   │    │
+│   │     • calculate() -> CalculationResult                                       │    │
+│   │     • get_dependencies() -> DependencyGraph                                  │    │
+│   │     • run_sensitivity(params) -> SensitivityMatrix                           │    │
+│   │     • validate_inputs() -> ValidationResult                                  │    │
+│   │     • get_outputs() -> Dict[str, Any]                                        │    │
+│   │                                                                              │    │
+│   └────────────────────────────────────┬────────────────────────────────────────┘    │
+│                                        │                                              │
+│          ┌─────────────────────────────┼─────────────────────────────┐               │
+│          │                             │                             │               │
+│          ▼                             ▼                             ▼               │
+│   ┌─────────────┐              ┌─────────────┐              ┌─────────────┐          │
+│   │  LBOModel   │              │  DCFModel   │              │ MergerModel │          │
+│   │             │              │             │              │             │          │
+│   │ • IRR/MOIC  │              │ • WACC      │              │ • Accretion │          │
+│   │ • Debt sched│              │ • Terminal  │              │ • Synergies │          │
+│   │ • Returns   │              │ • NPV       │              │ • EPS impact│          │
+│   └─────────────┘              └─────────────┘              └─────────────┘          │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                          CalculationGraph (DAG)                              │    │
+│   │                                                                              │    │
+│   │   ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐                       │    │
+│   │   │ Input │────▶│ Calc  │────▶│ Calc  │────▶│Output │                       │    │
+│   │   │ Cell  │     │ Cell  │     │ Cell  │     │ Cell  │                       │    │
+│   │   └───────┘     └───────┘     └───────┘     └───────┘                       │    │
+│   │                      │             ▲                                         │    │
+│   │                      └─────────────┘                                         │    │
+│   │                    (Circular Reference)                                      │    │
+│   │                                                                              │    │
+│   │   Features:                                                                  │    │
+│   │     • Topological sorting for calculation order                              │    │
+│   │     • Circular reference detection and iteration                             │    │
+│   │     • Incremental recalculation on input change                              │    │
+│   │     • Formula AST parsing and evaluation                                     │    │
+│   │                                                                              │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                          ScenarioManager                                     │    │
+│   │                                                                              │    │
+│   │   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐                     │    │
+│   │   │  Base   │   │  Bull   │   │  Bear   │   │ Stress  │                     │    │
+│   │   │  Case   │   │  Case   │   │  Case   │   │  Test   │                     │    │
+│   │   │  50%    │   │  25%    │   │  20%    │   │   5%    │                     │    │
+│   │   └─────────┘   └─────────┘   └─────────┘   └─────────┘                     │    │
+│   │                                                                              │    │
+│   │   Features:                                                                  │    │
+│   │     • Scenario branching from base                                           │    │
+│   │     • Probability-weighted outputs                                           │    │
+│   │     • Monte Carlo simulation support                                         │    │
+│   │     • Scenario comparison and diff                                           │    │
+│   │                                                                              │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Volumes
+### LBO Model Example
 
-| Volume | Purpose |
-|--------|---------|
-| `fmp-postgres-data` | PostgreSQL data persistence |
-| `fmp-redis-data` | Redis AOF persistence |
-| `fmp-backend-logs` | Application logs |
-| `fmp-backend-data` | Uploaded files, exports |
-| `fmp-minio-data` | S3-compatible object storage |
+```python
+from core.models import LBOModel, LBOInputs
 
-## API Endpoints
+inputs = LBOInputs(
+    enterprise_value=500,
+    equity_purchase_price=450,
+    senior_debt_amount=250,
+    senior_debt_rate=0.06,
+    sponsor_equity=200,
+    projection_years=5,
+    revenue_base=300,
+    revenue_growth_rates=[0.05, 0.05, 0.05, 0.05, 0.05],
+    ebitda_margins=[0.20, 0.21, 0.22, 0.22, 0.23],
+    exit_year=5,
+    exit_multiple=8.0,
+)
 
-### Authentication
+model = LBOModel(model_id="lbo-1", name="Project Alpha")
+model.set_inputs(inputs)
+result = model.calculate()
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/auth/register` | Register new user | No |
-| POST | `/api/v1/auth/login` | Login and get tokens | No |
-| POST | `/api/v1/auth/refresh` | Refresh access token | No |
-| POST | `/api/v1/auth/logout` | Logout and revoke token | No |
-| GET | `/api/v1/auth/me` | Get current user profile | Yes |
-| PUT | `/api/v1/auth/me` | Update user profile | Yes |
-| POST | `/api/v1/auth/change-password` | Change password | Yes |
+print(f"IRR: {result.outputs['irr']:.1%}")      # IRR: 24.3%
+print(f"MOIC: {result.outputs['moic']:.2f}x")   # MOIC: 2.97x
+```
 
-### Financial Models
+### 3-Statement Model Example
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/models/` | Create new model | Yes |
-| GET | `/api/v1/models/` | List user's models | Yes |
-| GET | `/api/v1/models/{id}` | Get model by ID | Yes |
-| PUT | `/api/v1/models/{id}` | Update model | Yes |
-| DELETE | `/api/v1/models/{id}` | Delete (archive) model | Yes |
-| PUT | `/api/v1/models/{id}/cells` | Batch update cells | Yes |
-| POST | `/api/v1/models/{id}/calculate` | Trigger recalculation | Yes |
+```python
+from core.models import ThreeStatementModel, ThreeStatementInputs
 
-### Collaboration
+inputs = ThreeStatementInputs(
+    base_revenue=1_000_000,
+    base_cogs=600_000,
+    projection_years=5,
+    revenue_growth_rates=[0.08, 0.07, 0.06, 0.05, 0.05],
+    cogs_percent_revenue=[0.60, 0.59, 0.58, 0.58, 0.57],
+    ar_days=45,
+    inventory_days=50,
+    ap_days=35,
+    tax_rate=0.25,
+)
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| WS | `/ws/models/{id}` | Real-time WebSocket connection | Yes (token param) |
-| POST | `/api/v1/collaboration/comments` | Create comment | Yes |
-| GET | `/api/v1/collaboration/comments` | Get comments for model | Yes |
-| PUT | `/api/v1/collaboration/comments/{id}` | Update/resolve comment | Yes |
-| DELETE | `/api/v1/collaboration/comments/{id}` | Delete comment | Yes |
-| POST | `/api/v1/collaboration/annotations` | Create annotation | Yes |
-| GET | `/api/v1/collaboration/annotations` | Get annotations | Yes |
-| DELETE | `/api/v1/collaboration/annotations/{id}` | Delete annotation | Yes |
-| GET | `/api/v1/collaboration/presence/{model_id}` | Get active users | Yes |
+model = ThreeStatementModel(model_id="3stmt-1", name="Company Forecast")
+model.set_inputs(inputs)
+result = model.calculate()
 
-### LBO Analysis
+# Access integrated financial statements
+income_statement = result.outputs['income_statement']
+balance_sheet = result.outputs['balance_sheet']
+cash_flow = result.outputs['cash_flow']
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/models/lbo/analyze` | Run LBO analysis | No |
-| POST | `/api/v1/models/lbo/sensitivity` | Sensitivity analysis | No |
+---
 
-### Valuations
+## Workflows
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/valuations/dcf` | DCF valuation | No |
-| POST | `/api/v1/valuations/comps` | Trading comparables | No |
-| POST | `/api/v1/valuations/precedents` | Precedent transactions | No |
+### User Authentication Flow
 
-### Deal Analysis
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                            AUTHENTICATION WORKFLOW                                    │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   REGISTRATION                                                                        │
+│   ────────────                                                                        │
+│                                                                                       │
+│   ┌────────┐     ┌────────────┐     ┌────────────┐     ┌────────────┐               │
+│   │ Client │────▶│  POST      │────▶│  Validate  │────▶│   Hash     │               │
+│   │  Form  │     │  /register │     │   Email    │     │  Password  │               │
+│   └────────┘     └────────────┘     └────────────┘     └─────┬──────┘               │
+│                                                               │                       │
+│                                                               ▼                       │
+│   ┌────────┐     ┌────────────┐     ┌────────────┐     ┌────────────┐               │
+│   │ Tokens │◀────│  Generate  │◀────│   Store    │◀────│   Create   │               │
+│   │ Sent   │     │   JWT      │     │   User     │     │   User     │               │
+│   └────────┘     └────────────┘     └────────────┘     └────────────┘               │
+│                                                                                       │
+│   LOGIN                                                                               │
+│   ─────                                                                               │
+│                                                                                       │
+│   ┌────────┐     ┌────────────┐     ┌────────────┐     ┌────────────┐               │
+│   │ Client │────▶│  POST      │────▶│   Verify   │────▶│  Compare   │               │
+│   │  Form  │     │  /login    │     │   User     │     │  Password  │               │
+│   └────────┘     └────────────┘     └────────────┘     └─────┬──────┘               │
+│                                                               │                       │
+│                                                               ▼                       │
+│   ┌────────┐     ┌────────────┐     ┌────────────┐                                   │
+│   │ Tokens │◀────│  Generate  │◀────│   Create   │                                   │
+│   │ Sent   │     │ JWT Tokens │     │  Session   │                                   │
+│   └────────┘     └────────────┘     └────────────┘                                   │
+│                                                                                       │
+│   TOKEN REFRESH                                                                       │
+│   ─────────────                                                                       │
+│                                                                                       │
+│   ┌────────┐     ┌────────────┐     ┌────────────┐     ┌────────────┐               │
+│   │ Client │────▶│  POST      │────▶│  Validate  │────▶│  Generate  │               │
+│   │Refresh │     │  /refresh  │     │  Refresh   │     │  New Access│               │
+│   │ Token  │     │            │     │   Token    │     │   Token    │               │
+│   └────────┘     └────────────┘     └────────────┘     └────────────┘               │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/deals/merger/accretion` | M&A accretion/dilution | No |
-| POST | `/api/v1/deals/spinoff` | Spin-off analysis | No |
-| POST | `/api/v1/deals/contribution` | Contribution analysis | No |
+### Model Calculation Flow
 
-### Industry-Specific Models
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                          MODEL CALCULATION WORKFLOW                                   │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   1. INPUT VALIDATION                                                                 │
+│   ────────────────────                                                                │
+│   ┌────────────┐     ┌────────────┐     ┌────────────┐                               │
+│   │   User     │────▶│  Validate  │────▶│   Parse    │                               │
+│   │   Input    │     │   Types    │     │  Formulas  │                               │
+│   └────────────┘     └────────────┘     └─────┬──────┘                               │
+│                                               │                                       │
+│   2. BUILD DEPENDENCY GRAPH                   ▼                                       │
+│   ─────────────────────────                                                           │
+│   ┌────────────┐     ┌────────────┐     ┌────────────┐                               │
+│   │   Scan     │────▶│   Build    │────▶│  Detect    │                               │
+│   │  Formulas  │     │    DAG     │     │  Cycles    │                               │
+│   └────────────┘     └────────────┘     └─────┬──────┘                               │
+│                                               │                                       │
+│   3. TOPOLOGICAL SORT                         ▼                                       │
+│   ───────────────────                                                                 │
+│   ┌────────────┐     ┌────────────┐     ┌────────────┐                               │
+│   │   Sort     │────▶│  Handle    │────▶│  Generate  │                               │
+│   │   Nodes    │     │  Circular  │     │  Order     │                               │
+│   └────────────┘     └────────────┘     └─────┬──────┘                               │
+│                                               │                                       │
+│   4. CALCULATE                                ▼                                       │
+│   ────────────                                                                        │
+│   ┌────────────┐     ┌────────────┐     ┌────────────┐                               │
+│   │  Execute   │────▶│   Store    │────▶│   Return   │                               │
+│   │  In Order  │     │  Results   │     │  Outputs   │                               │
+│   └────────────┘     └────────────┘     └────────────┘                               │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/industry/sale-leaseback/analyze` | Sale-leaseback transaction analysis | No |
-| POST | `/api/v1/industry/sale-leaseback/sensitivity` | Sale-leaseback sensitivity | No |
-| POST | `/api/v1/industry/reit/analyze` | REIT valuation and metrics | No |
-| POST | `/api/v1/industry/reit/ffo-affo` | FFO/AFFO calculation | No |
-| POST | `/api/v1/industry/reit/sensitivity` | REIT sensitivity analysis | No |
-| POST | `/api/v1/industry/nav/analyze` | Net Asset Value calculation | No |
-| POST | `/api/v1/industry/nav/sotp` | Sum-of-the-parts breakdown | No |
-| POST | `/api/v1/industry/nav/sensitivity` | NAV sensitivity analysis | No |
+### Real-time Collaboration Flow
 
-### Bespoke Transactions
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                       REAL-TIME COLLABORATION WORKFLOW                                │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   USER A                  SERVER                        USER B                        │
+│   ──────                  ──────                        ──────                        │
+│     │                       │                             │                           │
+│     │──── WS Connect ──────▶│                             │                           │
+│     │                       │◀──── WS Connect ────────────│                           │
+│     │                       │                             │                           │
+│     │◀─── User Joined ──────│────── User Joined ─────────▶│                           │
+│     │                       │                             │                           │
+│     │◀─── Presence ─────────│────── Presence ────────────▶│                           │
+│     │                       │                             │                           │
+│     │                       │                             │                           │
+│     │──── Lock Cell B5 ────▶│                             │                           │
+│     │                       │                             │                           │
+│     │◀─── Lock Confirmed ───│────── Cell B5 Locked ──────▶│                           │
+│     │                       │                             │                           │
+│     │                       │                             │                           │
+│     │──── Update B5 ───────▶│                             │                           │
+│     │                       │                             │                           │
+│     │◀─── Update Ack ───────│────── Cell Update ─────────▶│                           │
+│     │                       │                             │                           │
+│     │                       │                             │                           │
+│     │──── Unlock B5 ───────▶│                             │                           │
+│     │                       │                             │                           │
+│     │◀─── Unlock Ack ───────│────── B5 Unlocked ─────────▶│                           │
+│     │                       │                             │                           │
+│     │                       │                             │                           │
+│     │──── Add Comment ─────▶│                             │                           │
+│     │                       │                             │                           │
+│     │◀─── Comment Added ────│────── New Comment ─────────▶│                           │
+│     │                       │                             │                           │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/bespoke/spinoff/analyze` | Spin-off/carve-out analysis | No |
-| POST | `/api/v1/bespoke/spinoff/value-creation` | Value creation calculation | No |
-| POST | `/api/v1/bespoke/ip-licensing/analyze` | IP licensing analysis | No |
-| POST | `/api/v1/bespoke/ip-licensing/valuation` | IP license valuation | No |
-| POST | `/api/v1/bespoke/rmt/analyze` | Reverse Morris Trust analysis | No |
-| POST | `/api/v1/bespoke/rmt/tax-analysis` | RMT tax implications | No |
-| POST | `/api/v1/bespoke/rmt/accretion-dilution` | RMT accretion/dilution | No |
+### Due Diligence Workflow
 
-### Due Diligence
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                           DUE DILIGENCE WORKFLOW                                      │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   PHASE 1: SETUP                                                                      │
+│   ──────────────                                                                      │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐              │
+│   │   Select    │──▶│   Load      │──▶│  Assign     │──▶│   Set       │              │
+│   │  Vertical   │   │  Checklist  │   │   Team      │   │ Deadlines   │              │
+│   └─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘              │
+│                                                                                       │
+│   Supported Verticals:                                                                │
+│   • Technology     • Healthcare     • Manufacturing                                   │
+│   • Real Estate    • Financial      • Retail                                          │
+│                                                                                       │
+│   PHASE 2: DATA COLLECTION                                                            │
+│   ────────────────────────                                                            │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐              │
+│   │  Request    │──▶│   Upload    │──▶│    AI       │──▶│   Review    │              │
+│   │  Documents  │   │   Files     │   │  Analysis   │   │  Findings   │              │
+│   └─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘              │
+│                                                                                       │
+│   PHASE 3: ANALYSIS                                                                   │
+│   ─────────────────                                                                   │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐              │
+│   │   Log       │──▶│   QoE       │──▶│    Risk     │──▶│    AI       │              │
+│   │  Findings   │   │ Calculation │   │   Matrix    │   │   Risks     │              │
+│   └─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘              │
+│                                                                                       │
+│   Severity Levels: Critical | High | Medium | Low | Info                              │
+│   Risk Score: Likelihood (1-5) × Impact (1-5) = 1-25                                  │
+│                                                                                       │
+│   PHASE 4: RECOMMENDATIONS                                                            │
+│   ────────────────────────                                                            │
+│   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐                                │
+│   │  Generate   │──▶│   Deal      │──▶│   Export    │                                │
+│   │  Summary    │   │   Rec       │   │   Report    │                                │
+│   └─────────────┘   └─────────────┘   └─────────────┘                                │
+│                                                                                       │
+│   Recommendations: PROCEED | PROCEED WITH CAUTION | DO NOT PROCEED                    │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/due-diligence/analyze` | Comprehensive DD analysis | No |
-| POST | `/api/v1/due-diligence/checklist/{vertical}` | Vertical-specific checklist | No |
-| POST | `/api/v1/due-diligence/qoe` | Quality of Earnings analysis | No |
-| POST | `/api/v1/due-diligence/risk-matrix` | Risk matrix calculation | No |
-| POST | `/api/v1/due-diligence/findings/summarize` | Summarize DD findings | No |
-| POST | `/api/v1/due-diligence/recommendations` | Get DD recommendations | No |
-| GET | `/api/v1/due-diligence/verticals` | List available verticals | No |
-| GET | `/api/v1/due-diligence/categories` | List finding categories | No |
-| GET | `/api/v1/due-diligence/severities` | List severity levels | No |
+### Export Generation Flow
 
-### Health & Monitoring
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                           EXPORT GENERATION WORKFLOW                                  │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   PDF EXPORT                                                                          │
+│   ──────────                                                                          │
+│   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐     │
+│   │  Select   │──▶│   Load    │──▶│  Generate │──▶│   Add     │──▶│  Stream   │     │
+│   │ Template  │   │   Data    │   │   Pages   │   │  Charts   │   │   File    │     │
+│   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘     │
+│                                                                                       │
+│   Templates: LBO Report | 3-Statement | 13-Week CF | Custom                           │
+│                                                                                       │
+│   POWERPOINT EXPORT                                                                   │
+│   ─────────────────                                                                   │
+│   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌───────────┐     │
+│   │  Select   │──▶│   Build   │──▶│   Add     │──▶│  Format   │──▶│  Stream   │     │
+│   │   Type    │   │  Slides   │   │ Charts/   │   │  Styling  │   │   File    │     │
+│   │           │   │           │   │  Tables   │   │           │   │           │     │
+│   └───────────┘   └───────────┘   └───────────┘   └───────────┘   └───────────┘     │
+│                                                                                       │
+│   Types: LBO Presentation | Valuation Deck | Scenario Comparison | Custom             │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
+---
+
+## API Reference
+
+### Complete Endpoint List
+
+#### Authentication (`/api/v1/auth`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/register` | Register new user | No |
+| POST | `/login` | Login and get tokens | No |
+| POST | `/refresh` | Refresh access token | No |
+| POST | `/logout` | Logout and revoke token | No |
+| GET | `/me` | Get current user profile | Yes |
+| PUT | `/me` | Update user profile | Yes |
+| POST | `/change-password` | Change password | Yes |
+
+#### Financial Models (`/api/v1/models`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/` | Create new model | Yes |
+| GET | `/` | List user's models | Yes |
+| GET | `/{id}` | Get model by ID | Yes |
+| PUT | `/{id}` | Update model | Yes |
+| DELETE | `/{id}` | Delete (archive) model | Yes |
+| PUT | `/{id}/cells` | Batch update cells | Yes |
+| POST | `/{id}/calculate` | Trigger recalculation | Yes |
+| POST | `/lbo/analyze` | Run LBO analysis | No |
+| POST | `/lbo/sensitivity` | LBO sensitivity analysis | No |
+
+#### Valuations (`/api/v1/valuations`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/dcf` | DCF valuation | No |
+| POST | `/comps` | Trading comparables | No |
+| POST | `/precedents` | Precedent transactions | No |
+
+#### Deal Analysis (`/api/v1/deals`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/merger/accretion` | M&A accretion/dilution | No |
+| POST | `/spinoff` | Spin-off analysis | No |
+| POST | `/contribution` | Contribution analysis | No |
+
+#### Collaboration (`/api/v1/collaboration`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| WS | `/ws/models/{id}` | Real-time WebSocket | Yes |
+| POST | `/comments` | Create comment | Yes |
+| GET | `/comments` | Get comments for model | Yes |
+| PUT | `/comments/{id}` | Update/resolve comment | Yes |
+| DELETE | `/comments/{id}` | Delete comment | Yes |
+| POST | `/annotations` | Create annotation | Yes |
+| GET | `/annotations` | Get annotations | Yes |
+| DELETE | `/annotations/{id}` | Delete annotation | Yes |
+| GET | `/presence/{model_id}` | Get active users | Yes |
+
+#### Industry Models (`/api/v1/industry`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/sale-leaseback/analyze` | Sale-leaseback analysis | No |
+| POST | `/sale-leaseback/sensitivity` | Sale-leaseback sensitivity | No |
+| POST | `/reit/analyze` | REIT valuation | No |
+| POST | `/reit/ffo-affo` | FFO/AFFO calculation | No |
+| POST | `/reit/sensitivity` | REIT sensitivity | No |
+| POST | `/nav/analyze` | NAV calculation | No |
+| POST | `/nav/sotp` | Sum-of-the-parts | No |
+| POST | `/nav/sensitivity` | NAV sensitivity | No |
+
+#### Bespoke Transactions (`/api/v1/bespoke`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/spinoff/analyze` | Spin-off analysis | No |
+| POST | `/spinoff/value-creation` | Value creation | No |
+| POST | `/ip-licensing/analyze` | IP licensing analysis | No |
+| POST | `/ip-licensing/valuation` | IP license valuation | No |
+| POST | `/rmt/analyze` | RMT analysis | No |
+| POST | `/rmt/tax-analysis` | RMT tax implications | No |
+| POST | `/rmt/accretion-dilution` | RMT accretion/dilution | No |
+
+#### Due Diligence (`/api/v1/due-diligence`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/analyze` | Comprehensive DD analysis | No |
+| POST | `/checklist/{vertical}` | Vertical-specific checklist | No |
+| POST | `/qoe` | Quality of Earnings | No |
+| POST | `/risk-matrix` | Risk matrix calculation | No |
+| POST | `/findings/summarize` | Summarize findings | No |
+| POST | `/recommendations` | Get recommendations | No |
+| GET | `/verticals` | List available verticals | No |
+| GET | `/categories` | List finding categories | No |
+| GET | `/severities` | List severity levels | No |
+
+#### Export (`/api/v1/export`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/pdf/lbo` | Generate LBO PDF | No |
+| POST | `/pdf/three-statement` | Generate 3-statement PDF | No |
+| POST | `/pdf/13-week-cash-flow` | Generate 13-week CF PDF | No |
+| POST | `/pdf/custom` | Generate custom PDF | No |
+| POST | `/pptx/lbo` | Generate LBO presentation | No |
+| POST | `/pptx/valuation` | Generate valuation deck | No |
+| POST | `/pptx/scenario-comparison` | Scenario comparison | No |
+| POST | `/pptx/custom` | Generate custom PPTX | No |
+| GET | `/templates` | List report templates | No |
+| POST | `/templates` | Create custom template | No |
+| DELETE | `/templates/{id}` | Delete template | No |
+
+#### Excel Add-in (`/api/v1/excel`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/get-value` | Fetch value from model | No |
+| POST | `/create-link` | Create bidirectional link | No |
+| POST | `/scenario-value` | Get scenario-specific value | No |
+| POST | `/sync` | Sync cell change | No |
+| POST | `/sync-batch` | Batch sync operations | No |
+| POST | `/sensitivity` | Calculate sensitivity | No |
+| POST | `/audit` | Get cell audit info | No |
+| POST | `/comments` | Get cell comments | No |
+| POST | `/unlink` | Remove cell link | No |
+| GET | `/links/{client_id}` | Get client's linked cells | No |
+| WS | `/ws` | Real-time Excel sync | No |
+
+#### Health & Monitoring
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
 | GET | `/health` | Basic health check | No |
-| GET | `/health/live` | Kubernetes liveness probe | No |
-| GET | `/health/ready` | Kubernetes readiness probe | No |
-| GET | `/health/detailed` | Detailed health with system metrics | No |
+| GET | `/health/live` | Kubernetes liveness | No |
+| GET | `/health/ready` | Kubernetes readiness | No |
+| GET | `/health/detailed` | Detailed health + metrics | No |
 | GET | `/health/version` | Version and build info | No |
-| GET | `/metrics` | Prometheus-compatible metrics | No |
+| GET | `/metrics` | Prometheus metrics | No |
 
-### Export & Reports
+### API Examples
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/export/pdf/lbo` | Generate LBO PDF report | No |
-| POST | `/api/v1/export/pdf/three-statement` | Generate 3-statement PDF | No |
-| POST | `/api/v1/export/pdf/13-week-cash-flow` | Generate 13-week CF PDF | No |
-| POST | `/api/v1/export/pdf/custom` | Generate custom PDF report | No |
-| POST | `/api/v1/export/pptx/lbo` | Generate LBO presentation | No |
-| POST | `/api/v1/export/pptx/valuation` | Generate valuation deck | No |
-| POST | `/api/v1/export/pptx/scenario-comparison` | Generate scenario comparison | No |
-| POST | `/api/v1/export/pptx/custom` | Generate custom presentation | No |
-| GET | `/api/v1/export/templates` | List report templates | No |
-| GET | `/api/v1/export/templates/{id}` | Get template details | No |
-| POST | `/api/v1/export/templates` | Create custom template | No |
-| DELETE | `/api/v1/export/templates/{id}` | Delete template | No |
-| POST | `/api/v1/export/templates/{id}/clone` | Clone template | No |
-
-### Excel Add-in API
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/v1/excel/get-value` | Fetch value from model | No |
-| POST | `/api/v1/excel/create-link` | Create bidirectional link | No |
-| POST | `/api/v1/excel/scenario-value` | Get scenario-specific value | No |
-| POST | `/api/v1/excel/sync` | Sync cell change | No |
-| POST | `/api/v1/excel/sync-batch` | Batch sync operations | No |
-| POST | `/api/v1/excel/sensitivity` | Calculate sensitivity matrix | No |
-| POST | `/api/v1/excel/audit` | Get cell audit info | No |
-| POST | `/api/v1/excel/comments` | Get cell comments | No |
-| POST | `/api/v1/excel/unlink` | Remove cell link | No |
-| GET | `/api/v1/excel/links/{client_id}` | Get client's linked cells | No |
-| WS | `/api/v1/excel/ws` | Real-time Excel sync WebSocket | No |
-
-## Real-time Collaboration
-
-### WebSocket Connection
-
-Connect to the WebSocket endpoint with your access token:
-
-```javascript
-const ws = new WebSocket(
-  `ws://localhost:8001/ws/models/${modelId}?token=${accessToken}`
-);
-
-ws.onmessage = (event) => {
-  const message = JSON.parse(event.data);
-  console.log('Received:', message.type, message.payload);
-};
-```
-
-### WebSocket Message Types
-
-| Type | Direction | Description |
-|------|-----------|-------------|
-| `join` | Server→Client | User joined the model |
-| `leave` | Server→Client | User left the model |
-| `presence` | Server→Client | Current users list |
-| `cursor` | Bidirectional | Cursor/cell position update |
-| `cell_lock` | Bidirectional | Lock a cell for editing |
-| `cell_unlock` | Bidirectional | Release cell lock |
-| `cell_update` | Bidirectional | Cell value changed |
-| `comment_add` | Bidirectional | New comment added |
-| `comment_update` | Bidirectional | Comment updated |
-| `comment_delete` | Bidirectional | Comment deleted |
-| `ping`/`pong` | Bidirectional | Keep-alive |
-| `error` | Server→Client | Error message |
-
-### Example: Cell Locking
-
-```javascript
-// Request cell lock before editing
-ws.send(JSON.stringify({
-  type: 'cell_lock',
-  payload: { cell: 'B5' }
-}));
-
-// Listen for lock confirmation or error
-ws.onmessage = (event) => {
-  const msg = JSON.parse(event.data);
-  if (msg.type === 'cell_lock') {
-    console.log(`Cell ${msg.payload.cell} locked by ${msg.payload.user_name}`);
-  } else if (msg.type === 'error' && msg.payload.code === 'CELL_LOCKED') {
-    console.log('Cell is already locked by another user');
-  }
-};
-
-// Release lock when done editing
-ws.send(JSON.stringify({
-  type: 'cell_unlock',
-  payload: { cell: 'B5' }
-}));
-```
-
-## Example Usage
-
-### User Registration & Login
-
-```bash
-# Register a new user
-curl -X POST http://localhost:8001/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "analyst@example.com",
-    "password": "securepassword123",
-    "name": "John Analyst"
-  }'
-
-# Login to get access token
-curl -X POST http://localhost:8001/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "analyst@example.com",
-    "password": "securepassword123"
-  }'
-```
-
-### Creating Comments
-
-```bash
-# Add a comment on a cell
-curl -X POST http://localhost:8001/api/v1/collaboration/comments \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -d '{
-    "model_id": "3c33cfb4-eb13-4e9b-bfb3-5c7bd77852ee",
-    "content": "This assumption needs review",
-    "cell_address": "B5"
-  }'
-```
-
-**Response:**
-```json
-{
-  "id": "9a67acd8-80f2-4df7-93a0-a78b58c09f24",
-  "model_id": "3c33cfb4-eb13-4e9b-bfb3-5c7bd77852ee",
-  "cell_address": "B5",
-  "user_name": "John Analyst",
-  "content": "This assumption needs review",
-  "is_resolved": false,
-  "created_at": "2025-01-15T01:01:35.108815+00:00"
-}
-```
-
-### LBO Analysis
+#### LBO Analysis
 
 ```bash
 curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
@@ -636,31 +1260,188 @@ curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
 }
 ```
 
+#### Quality of Earnings
+
+```bash
+curl -X POST http://localhost:8001/api/v1/due-diligence/qoe \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reported_ebitda": 10000000,
+    "adjustments": [
+      {
+        "id": "q1",
+        "category": "One-time",
+        "description": "Legal settlement expense",
+        "amount": 500000,
+        "is_addback": true,
+        "is_recurring": false,
+        "confidence_level": 0.95
+      }
+    ]
+  }'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "qoe_analysis": {
+    "reported_ebitda": 10000000,
+    "total_addbacks": 500000,
+    "total_deductions": 0,
+    "adjusted_ebitda": 10500000,
+    "adjustment_count": 1,
+    "confidence_weighted_ebitda": 10475000
+  }
+}
+```
+
+---
+
+## WebSocket Real-time
+
+### Connection
+
+```javascript
+const ws = new WebSocket(
+  `ws://localhost:8001/ws/models/${modelId}?token=${accessToken}`
+);
+
+ws.onopen = () => {
+  console.log('Connected to model collaboration');
+};
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  handleMessage(message);
+};
+
+ws.onclose = () => {
+  console.log('Disconnected');
+};
+```
+
+### Message Types
+
+| Type | Direction | Payload |
+|------|-----------|---------|
+| `join` | Server→Client | `{ user_id, user_name }` |
+| `leave` | Server→Client | `{ user_id, user_name }` |
+| `presence` | Server→Client | `{ users: [...] }` |
+| `cursor` | Bidirectional | `{ cell, user_id }` |
+| `cell_lock` | Bidirectional | `{ cell, user_id?, user_name? }` |
+| `cell_unlock` | Bidirectional | `{ cell }` |
+| `cell_update` | Bidirectional | `{ cell, value, formula? }` |
+| `comment_add` | Bidirectional | `{ cell, content, user_name }` |
+| `comment_update` | Bidirectional | `{ comment_id, content?, is_resolved? }` |
+| `comment_delete` | Bidirectional | `{ comment_id }` |
+| `ping`/`pong` | Bidirectional | `{}` |
+| `error` | Server→Client | `{ code, message }` |
+
+### Cell Locking Example
+
+```javascript
+// Request lock before editing
+ws.send(JSON.stringify({
+  type: 'cell_lock',
+  payload: { cell: 'B5' }
+}));
+
+// Listen for confirmation
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
+  if (msg.type === 'cell_lock' && msg.payload.cell === 'B5') {
+    // Lock confirmed, safe to edit
+    editCell('B5');
+  } else if (msg.type === 'error' && msg.payload.code === 'CELL_LOCKED') {
+    // Cell is locked by another user
+    showLockWarning(msg.payload.message);
+  }
+};
+
+// Release lock when done
+ws.send(JSON.stringify({
+  type: 'cell_unlock',
+  payload: { cell: 'B5' }
+}));
+```
+
+---
+
+## Excel Add-in
+
+### Custom Functions (UDFs)
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `=FP.GET(model, cell, [version])` | Fetch value from platform | `=FP.GET("LBO/Deal1", "IRR")` |
+| `=FP.LINK(model, cell)` | Bidirectional sync link | `=FP.LINK("DCF/Base", "WACC")` |
+| `=FP.SCENARIO(name, cell)` | Scenario-specific value | `=FP.SCENARIO("Bear_Case", "B5")` |
+| `=FP.LIVE(source, id, field)` | Streaming real-time data | `=FP.LIVE("market", "AAPL", "price")` |
+| `=FP.SENSITIVITY(in, out, steps)` | Sensitivity table | `=FP.SENSITIVITY("B2", "C10", 10)` |
+| `=FP.AUDIT(cell, field)` | Audit information | `=FP.AUDIT("B5", "last_modified_by")` |
+| `=FP.COMMENT(cell)` | Get latest comment | `=FP.COMMENT("B5")` |
+
+### Task Pane Tabs
+
+| Tab | Features |
+|-----|----------|
+| **Home** | Connection status, Quick function insertion, Function reference |
+| **Links** | View linked cells, Refresh values, Unlink cells, Navigate to cells |
+| **Sync** | Online/offline status, Pending operations, Force sync, Clear cache |
+| **Settings** | Account management, Theme toggle, Auto-sync config, API URL |
+
+### Offline Support
+
+The add-in supports full offline operation:
+
+1. **IndexedDB Storage** - Pending operations stored locally
+2. **Value Cache** - Fetched values cached for offline access
+3. **Auto-Sync** - Changes sync when connection restored
+4. **Conflict Resolution** - Last-write-wins with timestamps
+
+---
+
 ## Testing
 
-### Backend Tests
+### Backend Tests (196 total)
 
 ```bash
 cd backend
 
-# Run all tests (196 tests)
+# Run all tests
 pytest tests/ -v
-
-# Run specific test file
-pytest tests/test_lbo_model.py -v
-pytest tests/test_auth.py -v
-pytest tests/test_websocket.py -v
-pytest tests/test_financial_models.py -v
-pytest tests/test_export.py -v
-pytest tests/test_excel_api.py -v
-pytest tests/test_industry_models.py -v
-pytest tests/test_bespoke_models.py -v
-pytest tests/test_due_diligence.py -v
-pytest tests/test_production.py -v
 
 # Run with coverage
 pytest tests/ --cov=core --cov=services --cov-report=html
+
+# Run specific test files
+pytest tests/test_lbo_model.py -v          # 13 tests
+pytest tests/test_auth.py -v               # 8 tests
+pytest tests/test_websocket.py -v          # 12 tests
+pytest tests/test_financial_models.py -v   # 23 tests
+pytest tests/test_export.py -v             # 28 tests
+pytest tests/test_excel_api.py -v          # 21 tests
+pytest tests/test_industry_models.py -v    # 21 tests
+pytest tests/test_bespoke_models.py -v     # 24 tests
+pytest tests/test_due_diligence.py -v      # 16 tests
+pytest tests/test_production.py -v         # 30 tests
 ```
+
+### Test Coverage by Module
+
+| Test File | Tests | Coverage Area |
+|-----------|-------|---------------|
+| `test_lbo_model.py` | 13 | LBO calculations, IRR/MOIC, debt schedules |
+| `test_auth.py` | 8 | Registration, login, JWT, password hashing |
+| `test_websocket.py` | 12 | Connection, presence, cell locking, comments |
+| `test_financial_models.py` | 23 | 3-statement, operating, 13-week models |
+| `test_export.py` | 28 | PDF generation, PPTX, templates |
+| `test_excel_api.py` | 21 | Custom functions, sync, links |
+| `test_industry_models.py` | 21 | Sale-leaseback, REIT, NAV |
+| `test_bespoke_models.py` | 24 | Spinoff, IP licensing, RMT |
+| `test_due_diligence.py` | 16 | Checklists, QoE, risk matrix |
+| `test_production.py` | 30 | Rate limiting, logging, error handling |
 
 ### Frontend Tests
 
@@ -670,197 +1451,135 @@ cd frontend
 # Run tests
 npm test
 
+# Run with UI
+npm run test:ui
+
 # Run with coverage
-npm run test:coverage
+npm run test -- --coverage
 ```
 
-## Database Migrations
+### End-to-End Testing Checklist
+
+- [ ] User registration and login
+- [ ] Create new LBO model
+- [ ] Input assumptions
+- [ ] Verify real-time calculation updates
+- [ ] Open model in Excel add-in
+- [ ] Modify cell in Excel, verify web sync
+- [ ] View stakeholder dashboard
+- [ ] Export to PDF
+- [ ] Export to PowerPoint
+- [ ] Create scenario branch
+- [ ] Compare scenarios
+- [ ] Add comments
+- [ ] Resolve comments
+- [ ] Test offline mode in Excel
+
+---
+
+## Docker Deployment
+
+### Quick Start
 
 ```bash
-cd backend
+# Clone and navigate
+cd micro1
 
-# Create a new migration
-alembic revision --autogenerate -m "Description of changes"
+# Configure environment
+cp .env.example .env
+# Edit .env with your settings
 
-# Apply migrations
-alembic upgrade head
+# Start all services
+docker-compose up -d
 
-# Rollback one migration
-alembic downgrade -1
+# Check status
+docker-compose ps
 
-# View migration history
-alembic history
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
-## Excel Add-in Custom Functions
+### Development Mode
 
-The Excel add-in provides custom functions for platform integration:
+```bash
+# Start with hot-reload
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `=FP.GET(model, cell, [version])` | Fetch value from platform | `=FP.GET("LBO/Deal1", "IRR")` |
-| `=FP.LINK(model, cell)` | Bidirectional sync link | `=FP.LINK("DCF/Base", "WACC")` |
-| `=FP.SCENARIO(name, cell)` | Scenario-specific value | `=FP.SCENARIO("Bear_Case", "B5")` |
-| `=FP.LIVE(source, id, field)` | Streaming real-time data | `=FP.LIVE("market", "AAPL", "price")` |
-| `=FP.SENSITIVITY(in, out, steps)` | Sensitivity analysis table | `=FP.SENSITIVITY("B2", "C10", 10)` |
-| `=FP.AUDIT(cell, field)` | Get audit information | `=FP.AUDIT("B5", "last_modified_by")` |
-| `=FP.COMMENT(cell)` | Get latest comment | `=FP.COMMENT("B5")` |
-
-### Function Details
-
-#### FP.GET - Fetch Value
-```excel
-=FP.GET("Portfolio/CompanyA/DCF", "IRR")
-=FP.GET("LBO/Deal1", "B5", 2)  // Specific version
+# Includes:
+# - Backend with uvicorn --reload
+# - Frontend with Vite dev server
+# - pgAdmin at http://localhost:5050
+# - Redis Commander at http://localhost:8081
 ```
-Retrieves a value from the platform. Values are cached for offline access.
 
-#### FP.LINK - Bidirectional Link
-```excel
-=FP.LINK("Portfolio/CompanyA/Model", "WACC")
+### Production Mode
+
+```bash
+# Start with production settings
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Includes:
+# - Optimized builds
+# - Resource limits
+# - Multiple replicas
+# - Environment validation
 ```
-Creates a bidirectional sync between the Excel cell and platform. Changes in either location are synchronized.
 
-#### FP.SCENARIO - Scenario Values
-```excel
-=FP.SCENARIO("Base_Case", "Revenue")
-=FP.SCENARIO("Bull_Case", "EBITDA")
-=FP.SCENARIO("Stress_Test", "Cash_Balance")
+### Docker Architecture
+
 ```
-Gets values from specific scenarios (Base, Upside, Downside, Stress).
-
-#### FP.LIVE - Streaming Data
-```excel
-=FP.LIVE("market", "AAPL", "price")
-=FP.LIVE("platform", "model_123", "irr")
+┌─────────────────────────────────────────────────────────────┐
+│                   Docker Network (fmp-network)               │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   ┌──────────┐    ┌──────────┐    ┌──────────────────────┐  │
+│   │ Frontend │◀──▶│ Backend  │◀──▶│ PostgreSQL + Redis   │  │
+│   │ (nginx)  │    │ (FastAPI)│    │                      │  │
+│   │ :3000    │    │ :8001    │    │ :5432      :6379     │  │
+│   └──────────┘    └──────────┘    └──────────────────────┘  │
+│                                                              │
+│   Optional:                                                  │
+│   ┌──────────┐    ┌──────────────┐    ┌────────────────┐    │
+│   │ MinIO    │    │ pgAdmin      │    │ Redis Commander│    │
+│   │ :9000    │    │ :5050        │    │ :8081          │    │
+│   └──────────┘    └──────────────┘    └────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
 ```
-Streaming function that updates automatically when the source data changes.
 
-#### FP.SENSITIVITY - Sensitivity Analysis
-```excel
-=FP.SENSITIVITY("B2", "D5", 10)  // 10 steps
+### Volumes
+
+| Volume | Purpose |
+|--------|---------|
+| `fmp-postgres-data` | PostgreSQL data persistence |
+| `fmp-redis-data` | Redis AOF persistence |
+| `fmp-backend-logs` | Application logs |
+| `fmp-backend-data` | Uploaded files, exports |
+| `fmp-minio-data` | S3-compatible object storage |
+
+### Health Checks
+
+```bash
+# Backend health
+curl http://localhost:8001/health
+
+# Frontend health
+curl http://localhost:3000/health
+
+# Detailed health with system metrics
+curl http://localhost:8001/health/detailed
+
+# Prometheus metrics
+curl http://localhost:8001/metrics
 ```
-Returns a sensitivity matrix showing how output varies with input changes.
 
-## Development Roadmap
-
-### Phase 1: Foundation (Completed)
-- [x] Project structure setup
-- [x] FastAPI backend with core endpoints
-- [x] Calculation engine with dependency graph
-- [x] LBO model with IRR/MOIC
-- [x] DCF, Comps, Precedents endpoints
-- [x] M&A accretion/dilution
-- [x] React frontend with TypeScript
-- [x] Redux state management
-- [x] Dashboard, Model Builder, Valuation UI
-- [x] Excel add-in foundation
-- [x] Unit tests (13 passing)
-
-### Phase 2: Database Integration (Completed)
-- [x] Alembic migrations setup
-- [x] PostgreSQL database schema
-- [x] User authentication (JWT with bcrypt)
-- [x] User registration and login
-- [x] Model CRUD with PostgreSQL persistence
-- [x] Role-based access control (Analyst, Stakeholder, Admin)
-- [x] Authentication tests (8 tests)
-
-### Phase 3: Real-time Collaboration (Completed)
-- [x] WebSocket connection manager
-- [x] User presence awareness (join/leave/cursor tracking)
-- [x] Cell locking for conflict prevention
-- [x] Real-time cell update broadcasting
-- [x] Comments and annotations system
-- [x] Threaded comments with resolution
-- [x] Database models for collaboration
-- [x] WebSocket tests (12 tests)
-- [x] Total: 33 tests passing
-
-### Phase 4: Financial Engine Enhancement (Completed)
-- [x] 3-statement model (Income Statement, Balance Sheet, Cash Flow)
-- [x] Operating model with revenue streams and cost drivers
-- [x] 13-week cash flow for liquidity forecasting
-- [x] Scenario management (Base, Upside, Downside, Custom)
-- [x] Monte Carlo simulation support
-- [x] Probability-weighted analysis
-- [x] Sensitivity analysis framework
-- [x] Financial models tests (23 tests)
-- [x] Total: 56 tests passing
-
-### Phase 5: Export & Reporting (Completed)
-- [x] PDF report generation with ReportLab
-- [x] PowerPoint export with python-pptx
-- [x] LBO, 3-statement, 13-week report generators
-- [x] Customizable report templates
-- [x] Template management system (create, clone, import/export)
-- [x] Charts and data visualization in exports
-- [x] Export API endpoints
-- [x] Export tests (28 tests)
-- [x] Total: 84 tests passing
-
-### Phase 6: Excel Add-in Completion (Completed)
-- [x] Full sync engine with WebSocket support
-- [x] IndexedDB offline storage for pending operations and cache
-- [x] Custom function streaming (FP.LIVE)
-- [x] Task pane UI with React and Fluent UI
-- [x] Backend Excel API endpoints
-- [x] Cell linking and bidirectional sync
-- [x] Scenario value retrieval
-- [x] Sensitivity analysis from Excel
-- [x] Audit trail and comments integration
-- [x] Excel API tests (21 tests)
-- [x] Total: 105 tests passing
-
-### Phase 7: Industry-Specific Models (Completed)
-- [x] Sale-Leaseback Model (transaction analysis, NPV, coverage ratios)
-- [x] REIT Valuation Model (FFO/AFFO, NAV, dividend analysis)
-- [x] NAV Model (sum-of-the-parts, holding company discount)
-- [x] Industry API endpoints with full analysis
-- [x] Sensitivity analysis for all industry models
-- [x] Industry model tests (21 tests)
-- [x] Total: 126 tests passing
-
-### Phase 8: Bespoke Transactions (Completed)
-- [x] Spin-Off/Carve-Out Model (value creation, stranded costs, TSA)
-- [x] IP Licensing Model (royalties, milestones, NPV valuation)
-- [x] Reverse Morris Trust Model (tax efficiency, ownership, accretion)
-- [x] Bespoke API endpoints with full analysis
-- [x] Tax analysis and synergy calculations
-- [x] Bespoke model tests (24 tests)
-- [x] Total: 150 tests passing
-
-### Phase 9: Due Diligence (Completed)
-- [x] Vertical-specific workflows (Technology, Healthcare, Manufacturing, Real Estate)
-- [x] Findings tracker with severity levels (Critical, High, Medium, Low, Info)
-- [x] Quality of Earnings (QoE) analysis with adjustments
-- [x] Risk matrix with likelihood/impact scoring (1-25 scale)
-- [x] Recommendation engine with deal recommendations
-- [x] Progress tracking for work items and document collection
-- [x] Due diligence API endpoints
-- [x] Due diligence tests (16 tests)
-- [x] React frontend with tabbed interface
-- [x] Findings Tracker component with CRUD operations
-- [x] Risk Matrix component with 5x5 visual grid
-- [x] QoE Calculator with EBITDA bridge visualization
-- [x] Vertical-specific checklist component
-- [x] DD Summary with recommendations display
-- [x] Total: 166 tests passing
-
-### Phase 10: Production Ready (Completed)
-- [x] Rate limiting middleware (token bucket algorithm, per-minute/hour limits)
-- [x] Request logging middleware (request ID, timing, slow request detection)
-- [x] Global error handling middleware (consistent JSON error responses)
-- [x] Custom API error classes (ValidationError, NotFoundError, etc.)
-- [x] Health check endpoints (/health, /health/live, /health/ready, /health/detailed)
-- [x] Prometheus metrics endpoint (/metrics)
-- [x] Version info endpoint (/health/version)
-- [x] Enhanced CORS configuration with exposed headers
-- [x] OpenAPI documentation (Swagger + ReDoc)
-- [x] Production tests (30 tests)
-- [x] Total: 196 tests passing
+---
 
 ## Environment Variables
+
+### Backend Configuration
 
 ```env
 # Application
@@ -890,673 +1609,123 @@ S3_BUCKET_NAME=finmodel-storage
 ALLOWED_ORIGINS=["http://localhost:3000", "http://localhost:5173"]
 ```
 
-## User Roles
+### Frontend Configuration
 
-| Role | Permissions |
-|------|-------------|
-| **Analyst** | Create, edit, delete models; manage scenarios; full model access |
-| **Stakeholder** | View models and dashboards; add comments |
-| **Admin** | Full access + user management |
+```env
+VITE_API_URL=http://localhost:8001
+VITE_WS_URL=ws://localhost:8001
+```
+
+### Docker Environment
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POSTGRES_USER` | fmp_user | PostgreSQL username |
+| `POSTGRES_PASSWORD` | fmp_password | PostgreSQL password |
+| `POSTGRES_DB` | financial_platform | Database name |
+| `REDIS_URL` | redis://redis:6379/0 | Redis connection |
+| `SECRET_KEY` | (required) | JWT signing key |
+| `VITE_API_URL` | http://localhost:8001 | Backend API URL |
+| `VITE_WS_URL` | ws://localhost:8001 | WebSocket URL |
+
+---
+
+## Tech Stack
+
+### Backend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Python | 3.11+ | Runtime |
+| FastAPI | 0.109+ | Web framework |
+| SQLAlchemy | 2.0+ | ORM |
+| PostgreSQL | 14+ | Database |
+| Redis | 7+ | Cache, sessions |
+| Alembic | 1.13+ | Migrations |
+| python-jose | 3.3+ | JWT |
+| bcrypt | 4.0+ | Password hashing |
+| numpy | 1.26+ | Calculations |
+| pandas | 2.2+ | Data analysis |
+| ReportLab | 4.0+ | PDF generation |
+| python-pptx | 0.6+ | PPTX generation |
+| pytest | 8.0+ | Testing |
+
+### Frontend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React | 18.2 | UI framework |
+| TypeScript | 5.3 | Type safety |
+| Redux Toolkit | 2.0 | State management |
+| React Router | 6.21 | Routing |
+| AG Grid | 31.0 | Spreadsheet |
+| Recharts | 2.10 | Charts |
+| Visx | 3.5 | Visualizations |
+| Zustand | 4.4 | UI state |
+| Axios | 1.6 | HTTP client |
+| Tailwind CSS | 3.4 | Styling |
+| Vite | 5.0 | Build tool |
+| Vitest | 1.0 | Testing |
+
+### Excel Add-in
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Office.js | Latest | Excel integration |
+| React | 18.2 | Task pane UI |
+| TypeScript | 5.3 | Type safety |
+| IndexedDB | Native | Offline storage |
+
+---
 
 ## Contributing
 
+### Development Setup
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-model`)
-3. Commit changes (`git commit -m 'Add new model'`)
-4. Push to branch (`git push origin feature/new-model`)
-5. Open a Pull Request
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Make changes and write tests
+4. Run tests: `pytest tests/ -v`
+5. Commit: `git commit -m 'Add new feature'`
+6. Push: `git push origin feature/new-feature`
+7. Open a Pull Request
+
+### Code Style
+
+- **Python**: Black formatter, Ruff linter, MyPy type checking
+- **TypeScript**: ESLint with React plugin, Prettier
+- **Commits**: Conventional commits format
+
+### Pull Request Checklist
+
+- [ ] Tests pass locally
+- [ ] New features have tests
+- [ ] Documentation updated
+- [ ] No linting errors
+- [ ] Type annotations complete
+
+---
 
 ## License
 
-MIT License - see LICENSE file for details.
-
-## Financial Models
-
-### 3-Statement Model
-
-Integrated Income Statement, Balance Sheet, and Cash Flow Statement with full circular reference handling.
-
-```python
-from core.models import ThreeStatementModel, ThreeStatementInputs
-
-inputs = ThreeStatementInputs(
-    base_revenue=1_000_000,
-    base_cogs=600_000,
-    projection_years=5,
-    revenue_growth_rates=[0.08, 0.07, 0.06, 0.05, 0.05],
-    cogs_percent_revenue=[0.60, 0.59, 0.58, 0.58, 0.57],
-    ar_days=45,
-    inventory_days=50,
-    ap_days=35,
-    tax_rate=0.25,
-)
-
-model = ThreeStatementModel(model_id="3stmt-1", name="Company Forecast")
-model.set_inputs(inputs)
-result = model.calculate()
-
-print(f"Year 5 Revenue: ${result.outputs['income_statement']['revenue'][-1]:,.0f}")
-print(f"Year 5 Net Income: ${result.outputs['income_statement']['net_income'][-1]:,.0f}")
-print(f"Average ROIC: {sum(result.outputs['metrics']['roic'])/5:.1%}")
-```
-
-### Operating Model
-
-Detailed revenue build from product lines with cost drivers and headcount planning.
-
-```python
-from core.models import OperatingModel, OperatingInputs, RevenueStream, CostDriver
-
-inputs = OperatingInputs(
-    projection_years=5,
-    revenue_streams=[
-        RevenueStream(
-            name="SaaS Subscriptions",
-            base_units=1000,
-            base_price=1200,
-            unit_growth_rates=[0.20, 0.15, 0.12, 0.10, 0.08],
-        ),
-        RevenueStream(
-            name="Professional Services",
-            base_units=50,
-            base_price=10000,
-            unit_growth_rates=[0.10, 0.10, 0.08, 0.05, 0.05],
-        ),
-    ],
-    cost_of_goods=[
-        CostDriver(name="Hosting", variable_rate=0.15, variable_basis="revenue"),
-        CostDriver(name="Support", fixed_amount=50000, inflation_rate=0.03),
-    ],
-    base_headcount=20,
-    revenue_per_employee=150000,
-    avg_salary=80000,
-)
-
-model = OperatingModel(model_id="op-1", name="SaaS Forecast")
-model.set_inputs(inputs)
-result = model.calculate()
-```
-
-### 13-Week Cash Flow
-
-Short-term liquidity forecasting with revolver management.
-
-```python
-from core.models import CashFlow13WeekModel, CashFlowInputs, WeeklyCashInput
-
-inputs = CashFlowInputs(
-    beginning_cash=500_000,
-    revolver_capacity=1_000_000,
-    minimum_cash_buffer=100_000,
-    base_weekly_collections=200_000,
-    base_weekly_payables=80_000,
-    payroll_amount=150_000,
-    payroll_frequency="biweekly",
-    debt_payments=[
-        WeeklyCashInput(week=4, amount=100_000),
-        WeeklyCashInput(week=8, amount=100_000),
-    ],
-)
-
-model = CashFlow13WeekModel(model_id="13wk-1", name="Q1 Forecast")
-model.set_inputs(inputs)
-result = model.calculate()
-
-print(f"Week 13 Ending Cash: ${result.outputs['liquidity']['ending_cash'][-1]:,.0f}")
-print(f"Minimum Cash: ${result.outputs['metrics']['minimum_cash_amount']:,.0f}")
-```
-
-### Scenario Management
-
-Create and compare scenarios with probability-weighted analysis.
-
-```python
-from core.engine import ScenarioManager, ScenarioType
-from core.models import LBOModel, LBOInputs
-
-base_inputs = LBOInputs(
-    enterprise_value=500,
-    sponsor_equity=200,
-    exit_multiple=8.0,
-    # ... other inputs
-)
-
-manager = ScenarioManager(base_inputs)
-
-# Create scenarios
-manager.create_scenario(
-    name="Bull Case",
-    scenario_type=ScenarioType.UPSIDE,
-    assumptions={"exit_multiple": 10.0, "revenue_growth_rates": [0.08, 0.07, 0.06, 0.05, 0.05]},
-    probability_weight=0.25,
-)
-
-manager.create_scenario(
-    name="Bear Case",
-    scenario_type=ScenarioType.DOWNSIDE,
-    assumptions={"exit_multiple": 6.0},
-    probability_weight=0.25,
-)
-
-# Compare scenarios
-def calc_fn(inputs):
-    model = LBOModel("temp", "temp")
-    model.set_inputs(inputs)
-    return model.calculate().outputs
-
-comparison = manager.compare_scenarios(
-    scenario_ids=[s.id for s in manager.list_scenarios()],
-    calculate_fn=calc_fn,
-    output_names=["irr", "moic"],
-)
-
-# Probability-weighted output
-weighted = manager.probability_weighted_output(calc_fn, ["irr", "moic"])
-print(f"Probability-Weighted IRR: {weighted['irr']:.1%}")
-```
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-## Export Examples
+## Links
 
-### Generate LBO PDF Report
-
-```bash
-curl -X POST http://localhost:8001/api/v1/export/pdf/lbo \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Project Alpha LBO Analysis",
-    "company_name": "Target Corp",
-    "prepared_by": "Investment Team",
-    "inputs": {
-      "enterprise_value": 500,
-      "equity_purchase_price": 450,
-      "senior_debt_amount": 250,
-      "senior_debt_rate": 0.06,
-      "sponsor_equity": 200,
-      "projection_years": 5,
-      "revenue_base": 300,
-      "revenue_growth_rates": [0.05, 0.05, 0.05, 0.05, 0.05],
-      "ebitda_margins": [0.20, 0.21, 0.22, 0.22, 0.23],
-      "exit_year": 5,
-      "exit_multiple": 8.0
-    }
-  }' --output lbo_report.pdf
-```
-
-### Generate PowerPoint Presentation
-
-```bash
-curl -X POST http://localhost:8001/api/v1/export/pptx/lbo \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Investment Memo",
-    "subtitle": "Project Alpha",
-    "inputs": { ... }
-  }' --output presentation.pptx
-```
-
-### List Available Templates
-
-```bash
-curl http://localhost:8001/api/v1/export/templates
-
-# Filter by type
-curl "http://localhost:8001/api/v1/export/templates?template_type=lbo&format=pdf"
-```
+- [API Documentation (Swagger)](http://localhost:8001/docs)
+- [API Documentation (ReDoc)](http://localhost:8001/redoc)
+- [Frontend Application](http://localhost:3000)
+- [Health Check](http://localhost:8001/health)
+- [Prometheus Metrics](http://localhost:8001/metrics)
 
 ---
 
-## Excel Add-in Task Pane
+<div align="center">
 
-The Excel add-in includes a full task pane UI built with React and Fluent UI:
+**Financial Modeling Platform** - Built with Python, React, and TypeScript
 
-### Home Tab
-- Connection status indicator
-- Quick function insertion
-- Function reference guide
+Phase 10 Complete | 196 Tests Passing | Production Ready
 
-### Links Tab
-- View all linked cells
-- Refresh linked values
-- Unlink cells
-- Navigate to cells in workbook
-
-### Sync Tab
-- Online/offline status
-- Pending operations count
-- Force sync button
-- Clear offline data
-
-### Settings Tab
-- User account management
-- Dark/light theme toggle
-- Auto-sync configuration
-- API URL configuration
-
-### Offline Support
-
-The add-in supports full offline operation:
-
-1. **IndexedDB Storage**: Pending operations are stored locally
-2. **Cache**: Fetched values are cached for offline access
-3. **Auto-Sync**: Changes sync automatically when connection is restored
-4. **Conflict Resolution**: Last-write-wins with timestamp comparison
-
----
-
----
-
-## Industry-Specific Models
-
-### Sale-Leaseback Analysis
-
-Analyze sale-leaseback transactions including proceeds, rent coverage, NPV, and financial impact.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/industry/sale-leaseback/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "properties": [
-      {
-        "name": "Corporate HQ",
-        "property_type": "office",
-        "square_feet": 100000,
-        "current_book_value": 20000000,
-        "market_value": 30000000,
-        "annual_noi": 2100000
-      }
-    ],
-    "target_cap_rate": 0.07,
-    "current_ebitda": 10000000,
-    "annual_escalation_rate": 0.025,
-    "projection_years": 15
-  }'
-```
-
-**Response includes:**
-- Portfolio summary (market value, NOI, implied cap rate)
-- Transaction economics (proceeds, gain/loss, tax impact)
-- Lease projections (annual rents, escalation)
-- Coverage ratios (EBITDA coverage, FCCR)
-- NPV analysis (breakeven year, IRR)
-- Use of proceeds analysis
-
-### REIT Valuation
-
-Complete REIT analysis with FFO/AFFO, NAV, and dividend metrics.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/industry/reit/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "shares_outstanding": 100000000,
-    "current_share_price": 25.0,
-    "total_noi": 150000000,
-    "total_debt": 500000000,
-    "rental_revenue": 200000000,
-    "property_expenses": 50000000,
-    "depreciation": 40000000,
-    "target_payout_ratio": 0.75,
-    "projection_years": 5
-  }'
-```
-
-**Response includes:**
-- FFO/AFFO calculation and per-share metrics
-- Dividend analysis (yield, payout ratios, coverage)
-- NAV calculation (premium/discount to market)
-- Capital structure metrics (leverage ratios)
-- Multi-year projections
-
-### NAV Model (Sum-of-the-Parts)
-
-Calculate Net Asset Value with holding company discount.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/industry/nav/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "shares_outstanding": 100000000,
-    "current_share_price": 15.0,
-    "total_real_estate": 1000000000,
-    "total_investments": 200000000,
-    "cash_and_equivalents": 50000000,
-    "total_debt": 400000000,
-    "holding_company_discount": 0.10
-  }'
-```
-
-**Response includes:**
-- Asset valuation by type
-- Liability valuation
-- NAV components (GAV, liabilities, discounts)
-- Per-share metrics (NAV/share, premium/discount)
-- Sum-of-the-parts breakdown
-- Sensitivity analysis
-
----
-
----
-
-## Bespoke Transaction Models
-
-### Spin-Off / Carve-Out Analysis
-
-Analyze corporate spin-offs and carve-out IPOs with value creation analysis.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/bespoke/spinoff/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transaction_type": "spinoff",
-    "spinco_name": "NewCo",
-    "spinco_ebitda": 100000000,
-    "spinco_debt": 50000000,
-    "parent_ebitda": 400000000,
-    "parent_debt": 200000000,
-    "spinco_ebitda_multiple": 10.0,
-    "parent_ebitda_multiple": 8.0,
-    "stranded_cost_amount": 15000000,
-    "transaction_costs": 5000000
-  }'
-```
-
-**Response includes:**
-- Pro-forma financials for both entities
-- Value creation from multiple expansion
-- Stranded cost analysis and mitigation schedule
-- Capital structure optimization
-- TSA (Transition Service Agreement) impact
-
-### IP Licensing Analysis
-
-Value intellectual property licensing deals with NPV analysis.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/bespoke/ip-licensing/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ip_type": "patent",
-    "ip_name": "Core Technology Portfolio",
-    "license_type": "exclusive",
-    "license_term_years": 10,
-    "royalty_rate": 0.05,
-    "upfront_fee": 5000000,
-    "licensee_base_revenue": 100000000,
-    "licensee_revenue_growth": 0.10,
-    "discount_rate": 0.12
-  }'
-```
-
-**Response includes:**
-- Royalty projections over license term
-- NPV of royalty stream
-- Milestone payment analysis
-- Comparable transaction analysis
-- Risk analysis by IP and license type
-
-### Reverse Morris Trust (RMT) Analysis
-
-Analyze tax-efficient spin-merger combinations.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/bespoke/rmt/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "spinco_name": "SpinCo",
-    "acquirer_name": "Acquirer Inc",
-    "spinco_ebitda": 200000000,
-    "spinco_debt": 100000000,
-    "spinco_assets": 800000000,
-    "spinco_tax_basis": 300000000,
-    "acquirer_ebitda": 150000000,
-    "acquirer_shares": 100000000,
-    "acquirer_share_price": 25.0,
-    "cost_synergies": 30000000,
-    "corporate_tax_rate": 0.25
-  }'
-```
-
-**Response includes:**
-- Ownership analysis (>50% requirement for tax-free)
-- Tax savings calculation
-- Synergy phase-in schedule
-- Accretion/dilution analysis
-- Pro-forma combined financials
-
----
-
-## Due Diligence Module
-
-### Comprehensive DD Analysis
-
-Run full due diligence analysis with findings, QoE, and risk assessment.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/due-diligence/analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "target_name": "Target Corp",
-    "transaction_type": "acquisition",
-    "deal_value": 500000000,
-    "vertical": "technology",
-    "current_phase": "phase_1",
-    "reported_ebitda": 50000000,
-    "findings": [
-      {
-        "id": "f1",
-        "category": "financial",
-        "severity": "high",
-        "title": "Revenue Recognition",
-        "description": "Non-standard revenue recognition practices identified",
-        "impact_amount": 2000000,
-        "status": "open"
-      }
-    ],
-    "risks": [
-      {
-        "id": "r1",
-        "category": "commercial",
-        "title": "Customer Concentration",
-        "description": "Top 3 customers represent 60% of revenue",
-        "likelihood": "possible",
-        "impact": "major"
-      }
-    ]
-  }'
-```
-
-**Response includes:**
-- Vertical-specific checklist with categories
-- Findings summary by severity (critical/high/medium/low)
-- QoE adjustments and adjusted EBITDA
-- Risk matrix with weighted scores
-- Progress tracking
-- Deal recommendations (Proceed/Proceed with Caution/Do Not Proceed)
-
-### Vertical-Specific Checklists
-
-Get DD checklist tailored to industry vertical.
-
-```bash
-# Technology vertical
-curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/technology
-
-# Healthcare vertical
-curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/healthcare
-
-# Manufacturing vertical
-curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/manufacturing
-
-# Real Estate vertical
-curl -X POST http://localhost:8001/api/v1/due-diligence/checklist/real_estate
-```
-
-**Available verticals:**
-- `technology` - IP, cybersecurity, tech stack assessment
-- `healthcare` - HIPAA, FDA, clinical operations
-- `manufacturing` - Supply chain, equipment, environmental
-- `real_estate` - Property, tenant, environmental
-- `financial_services` - Regulatory, compliance, risk
-- `retail` - Inventory, locations, e-commerce
-- `general` - Standard DD checklist
-
-### Quality of Earnings (QoE)
-
-Calculate adjusted EBITDA with QoE adjustments.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/due-diligence/qoe \
-  -H "Content-Type: application/json" \
-  -d '{
-    "reported_ebitda": 10000000,
-    "adjustments": [
-      {
-        "id": "q1",
-        "category": "One-time",
-        "description": "Legal settlement expense",
-        "amount": 500000,
-        "is_addback": true,
-        "is_recurring": false,
-        "confidence_level": 0.95
-      },
-      {
-        "id": "q2",
-        "category": "Owner",
-        "description": "Above-market owner compensation",
-        "amount": 200000,
-        "is_addback": true,
-        "is_recurring": true,
-        "confidence_level": 0.90
-      }
-    ]
-  }'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "qoe_analysis": {
-    "reported_ebitda": 10000000,
-    "total_addbacks": 700000,
-    "total_deductions": 0,
-    "adjusted_ebitda": 10700000,
-    "adjustment_count": 2,
-    "confidence_weighted_ebitda": 10665000
-  }
-}
-```
-
-### Risk Matrix
-
-Calculate risk scores using likelihood × impact matrix.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/due-diligence/risk-matrix \
-  -H "Content-Type: application/json" \
-  -d '{
-    "risks": [
-      {
-        "id": "r1",
-        "category": "commercial",
-        "title": "Customer concentration",
-        "description": "Top 3 customers = 60% revenue",
-        "likelihood": "possible",
-        "impact": "major"
-      },
-      {
-        "id": "r2",
-        "category": "technology",
-        "title": "Legacy systems",
-        "description": "Core systems need replacement",
-        "likelihood": "likely",
-        "impact": "moderate"
-      }
-    ]
-  }'
-```
-
-**Risk scoring:**
-- Likelihood: rare (1), unlikely (2), possible (3), likely (4), almost_certain (5)
-- Impact: minor (1), moderate (2), major (3), severe (4), catastrophic (5)
-- Risk score = likelihood × impact (1-25 scale)
-- Categories: critical (20-25), high (12-19), medium (6-11), low (1-5)
-
-### Findings Summary
-
-Summarize DD findings by severity and category.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/due-diligence/findings/summarize \
-  -H "Content-Type: application/json" \
-  -d '[
-    {
-      "id": "f1",
-      "category": "financial",
-      "severity": "critical",
-      "title": "Revenue Recognition Issue",
-      "description": "Material revenue misstatement",
-      "impact_amount": 5000000,
-      "status": "open"
-    },
-    {
-      "id": "f2",
-      "category": "legal",
-      "severity": "high",
-      "title": "Pending Litigation",
-      "description": "Material lawsuit in progress",
-      "impact_amount": 2000000,
-      "status": "in_review"
-    }
-  ]'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "findings_summary": {
-    "total_findings": 2,
-    "critical": 1,
-    "high": 1,
-    "medium": 0,
-    "low": 0,
-    "info": 0,
-    "total_quantified_impact": 7000000,
-    "open_findings": 1,
-    "by_category": {
-      "financial": 1,
-      "legal": 1
-    }
-  }
-}
-```
-
-### DD Recommendations
-
-Get deal recommendations based on findings and risks.
-
-```bash
-curl -X POST http://localhost:8001/api/v1/due-diligence/recommendations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "target_name": "Target Corp",
-    "reported_ebitda": 10000000,
-    "findings": [...],
-    "risks": [...],
-    "qoe_adjustments": [...]
-  }'
-```
-
-**Deal recommendations:**
-- `PROCEED` - No significant issues identified
-- `PROCEED_WITH_CAUTION` - Issues identified, mitigation required
-- `DO_NOT_PROCEED` - Critical issues, deal not recommended
-
----
-
-**Current Status**: Phase 10 Complete - Production-ready platform with rate limiting, request logging, error handling middleware, health checks, and Prometheus metrics. All phases (1-10) implemented. 196 backend tests passing.
-
-**Docker Support**: Full containerization with multi-stage Dockerfiles, docker-compose orchestration, development and production configurations, health checks, and persistent volumes.
+</div>
