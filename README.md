@@ -73,7 +73,10 @@ micro1/
 │   │   ├── auth_service.py    # Authentication logic
 │   │   ├── model_service.py   # Model CRUD operations
 │   │   ├── websocket_manager.py  # WebSocket connections
-│   │   └── collaboration_service.py  # Comments/annotations
+│   │   ├── collaboration_service.py  # Comments/annotations
+│   │   ├── pdf_service.py     # PDF report generation
+│   │   ├── pptx_service.py    # PowerPoint generation
+│   │   └── report_templates.py  # Template management
 │   └── tests/                 # pytest test suite
 │
 ├── frontend/                   # React TypeScript frontend
@@ -226,6 +229,24 @@ npm run dev
 | POST | `/api/v1/deals/merger/accretion` | M&A accretion/dilution | No |
 | POST | `/api/v1/deals/spinoff` | Spin-off analysis | No |
 | POST | `/api/v1/deals/contribution` | Contribution analysis | No |
+
+### Export & Reports
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/v1/export/pdf/lbo` | Generate LBO PDF report | No |
+| POST | `/api/v1/export/pdf/three-statement` | Generate 3-statement PDF | No |
+| POST | `/api/v1/export/pdf/13-week-cash-flow` | Generate 13-week CF PDF | No |
+| POST | `/api/v1/export/pdf/custom` | Generate custom PDF report | No |
+| POST | `/api/v1/export/pptx/lbo` | Generate LBO presentation | No |
+| POST | `/api/v1/export/pptx/valuation` | Generate valuation deck | No |
+| POST | `/api/v1/export/pptx/scenario-comparison` | Generate scenario comparison | No |
+| POST | `/api/v1/export/pptx/custom` | Generate custom presentation | No |
+| GET | `/api/v1/export/templates` | List report templates | No |
+| GET | `/api/v1/export/templates/{id}` | Get template details | No |
+| POST | `/api/v1/export/templates` | Create custom template | No |
+| DELETE | `/api/v1/export/templates/{id}` | Delete template | No |
+| POST | `/api/v1/export/templates/{id}/clone` | Clone template | No |
 
 ## Real-time Collaboration
 
@@ -384,7 +405,7 @@ curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
 ```bash
 cd backend
 
-# Run all tests (56 tests)
+# Run all tests (84 tests)
 pytest tests/ -v
 
 # Run specific test file
@@ -392,6 +413,7 @@ pytest tests/test_lbo_model.py -v
 pytest tests/test_auth.py -v
 pytest tests/test_websocket.py -v
 pytest tests/test_financial_models.py -v
+pytest tests/test_export.py -v
 
 # Run with coverage
 pytest tests/ --cov=core --cov=services --cov-report=html
@@ -485,13 +507,18 @@ The Excel add-in provides custom functions for platform integration:
 - [x] Financial models tests (23 tests)
 - [x] Total: 56 tests passing
 
-### Phase 5: Export & Reporting (Next)
-- [ ] PDF generation
-- [ ] PowerPoint export
-- [ ] Print-optimized layouts
-- [ ] Template system
+### Phase 5: Export & Reporting (Completed)
+- [x] PDF report generation with ReportLab
+- [x] PowerPoint export with python-pptx
+- [x] LBO, 3-statement, 13-week report generators
+- [x] Customizable report templates
+- [x] Template management system (create, clone, import/export)
+- [x] Charts and data visualization in exports
+- [x] Export API endpoints
+- [x] Export tests (28 tests)
+- [x] Total: 84 tests passing
 
-### Phase 6: Excel Add-in Completion
+### Phase 6: Excel Add-in Completion (Next)
 - [ ] Full sync engine
 - [ ] Offline support
 - [ ] Custom function streaming
@@ -694,4 +721,54 @@ print(f"Probability-Weighted IRR: {weighted['irr']:.1%}")
 
 ---
 
-**Current Status**: Phase 4 Complete - Enhanced financial engine with 3-statement model, operating model, 13-week cash flow, and full scenario management. 56 tests passing.
+## Export Examples
+
+### Generate LBO PDF Report
+
+```bash
+curl -X POST http://localhost:8001/api/v1/export/pdf/lbo \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Project Alpha LBO Analysis",
+    "company_name": "Target Corp",
+    "prepared_by": "Investment Team",
+    "inputs": {
+      "enterprise_value": 500,
+      "equity_purchase_price": 450,
+      "senior_debt_amount": 250,
+      "senior_debt_rate": 0.06,
+      "sponsor_equity": 200,
+      "projection_years": 5,
+      "revenue_base": 300,
+      "revenue_growth_rates": [0.05, 0.05, 0.05, 0.05, 0.05],
+      "ebitda_margins": [0.20, 0.21, 0.22, 0.22, 0.23],
+      "exit_year": 5,
+      "exit_multiple": 8.0
+    }
+  }' --output lbo_report.pdf
+```
+
+### Generate PowerPoint Presentation
+
+```bash
+curl -X POST http://localhost:8001/api/v1/export/pptx/lbo \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Investment Memo",
+    "subtitle": "Project Alpha",
+    "inputs": { ... }
+  }' --output presentation.pptx
+```
+
+### List Available Templates
+
+```bash
+curl http://localhost:8001/api/v1/export/templates
+
+# Filter by type
+curl "http://localhost:8001/api/v1/export/templates?template_type=lbo&format=pdf"
+```
+
+---
+
+**Current Status**: Phase 5 Complete - Full export system with PDF and PowerPoint generation, customizable report templates, and template management. 84 tests passing.
