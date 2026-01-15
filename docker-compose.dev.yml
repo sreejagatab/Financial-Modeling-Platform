@@ -1,0 +1,72 @@
+# Docker Compose Development Override
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # Backend API - Development Mode
+  # ===========================================
+  backend:
+    build:
+      target: development
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: debug
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+
+  # ===========================================
+  # Frontend - Development Mode
+  # ===========================================
+  frontend:
+    build:
+      target: development
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  # ===========================================
+  # pgAdmin - Database Management UI
+  # ===========================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: fmp-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - postgres
+    networks:
+      - fmp-network
+
+  # ===========================================
+  # Redis Commander - Redis Management UI
+  # ===========================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: fmp-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8081}:8081"
+    depends_on:
+      - redis
+    networks:
+      - fmp-network
+
+volumes:
+  pgadmin_data:
+    name: fmp-pgadmin-data

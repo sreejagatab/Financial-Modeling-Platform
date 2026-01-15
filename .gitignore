@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
+.claude/
+comprehensive.txt

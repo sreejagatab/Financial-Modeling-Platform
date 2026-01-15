@@ -1,0 +1,168 @@
+# Docker Compose - Financial Modeling Platform
+# Multi-service orchestration for development and production
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: fmp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fmp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fmp_password}
+      POSTGRES_DB: ${POSTGRES_DB:-financial_platform}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fmp_user} -d ${POSTGRES_DB:-financial_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fmp-network
+
+  # ===========================================
+  # Redis Cache
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: fmp-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fmp-network
+
+  # ===========================================
+  # Backend API (FastAPI)
+  # ===========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: ${BACKEND_TARGET:-production}
+    container_name: fmp-backend
+    restart: unless-stopped
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-fmp_user}:${POSTGRES_PASSWORD:-fmp_password}@postgres:5432/${POSTGRES_DB:-financial_platform}
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+      # Application
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${DEBUG:-false}
+      SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://frontend:3000}
+      # API
+      API_VERSION: v1
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - backend_logs:/app/logs
+      - backend_data:/app/data
+    ports:
+      - "${BACKEND_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - fmp-network
+
+  # ===========================================
+  # Frontend (React + Nginx)
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: ${FRONTEND_TARGET:-production}
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+        VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8001}
+    container_name: fmp-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    networks:
+      - fmp-network
+
+  # ===========================================
+  # MinIO (S3-compatible storage) - Optional
+  # ===========================================
+  minio:
+    image: minio/minio:latest
+    container_name: fmp-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - fmp-network
+    profiles:
+      - storage
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  fmp-network:
+    driver: bridge
+    name: fmp-network
+
+# ===========================================
+# Volumes
+# ===========================================
+volumes:
+  postgres_data:
+    name: fmp-postgres-data
+  redis_data:
+    name: fmp-redis-data
+  backend_logs:
+    name: fmp-backend-logs
+  backend_data:
+    name: fmp-backend-data
+  minio_data:
+    name: fmp-minio-data
