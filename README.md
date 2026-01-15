@@ -23,6 +23,7 @@
 - [Architecture](#-architecture)
 - [Features](#-features)
 - [AI-Powered Features](#-ai-powered-features)
+- [Frontend API Service Layer](#-frontend-api-service-layer)
 - [Quick Start](#-quick-start)
 - [Project Structure](#-project-structure)
 - [Financial Models](#-financial-models)
@@ -45,12 +46,13 @@ A comprehensive SaaS platform for financial modeling, valuation analysis, and de
 
 | Metric | Value |
 |--------|-------|
-| **Total Lines of Code** | 45,076 |
+| **Total Lines of Code** | 47,500+ |
 | **Backend Files** | 80 Python files (21,313 LOC) |
-| **Frontend Files** | 67 TypeScript files (20,610 LOC) |
+| **Frontend Files** | 79 TypeScript files (23,000+ LOC) |
 | **Excel Add-in** | 11 TypeScript files (3,128 LOC) |
 | **Test Coverage** | 196 tests passing |
-| **API Endpoints** | 50+ REST endpoints |
+| **Backend API Endpoints** | 50+ REST endpoints |
+| **Frontend API Services** | 97 endpoint integrations |
 | **Financial Models** | 11 model types |
 | **AI Components** | 6 AI-powered features |
 
@@ -447,6 +449,122 @@ interface AIRiskAssessment {
 
 ---
 
+## Frontend API Service Layer
+
+The frontend includes a comprehensive API service layer that connects to all backend endpoints.
+
+### API Services Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                          FRONTEND API SERVICE LAYER                                   │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                           API Client (Axios)                                 │    │
+│   │   • JWT authentication interceptor                                           │    │
+│   │   • Automatic token refresh                                                  │    │
+│   │   • Request ID tracing                                                       │    │
+│   │   • Error handling with auto-logout                                          │    │
+│   └────────────────────────────────────┬────────────────────────────────────────┘    │
+│                                        │                                              │
+│          ┌──────────┬──────────┬──────┴───────┬──────────┬──────────┐               │
+│          │          │          │              │          │          │               │
+│          ▼          ▼          ▼              ▼          ▼          ▼               │
+│   ┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐          │
+│   │  Auth    ││  Models  ││  Collab  ││Valuations││    DD    ││  Export  │          │
+│   │  API     ││   API    ││   API    ││   API    ││   API    ││   API    │          │
+│   │ 9 endpts ││22 endpts ││12 endpts ││ 8 endpts ││10 endpts ││12 endpts │          │
+│   └──────────┘└──────────┘└──────────┘└──────────┘└──────────┘└──────────┘          │
+│                                                                                       │
+│   ┌──────────┐┌──────────┐                                                           │
+│   │ Industry ││  Excel   │                                                           │
+│   │   API    ││   API    │                                                           │
+│   │12 endpts ││12 endpts │                                                           │
+│   └──────────┘└──────────┘                                                           │
+│                                                                                       │
+│   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│   │                         Redux Async Thunks                                   │    │
+│   │   • login, register, logout, getCurrentUser                                  │    │
+│   │   • fetchModels, createModel, updateModel, deleteModel                       │    │
+│   │   • fetchModel, createSheet, updateCells, calculateModel                     │    │
+│   │   • createScenario                                                           │    │
+│   └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### API Services Summary
+
+| Service | File | Endpoints | Description |
+|---------|------|-----------|-------------|
+| **authApi** | `auth.api.ts` | 9 | Login, register, logout, profile, password reset |
+| **modelsApi** | `models.api.ts` | 22 | Model CRUD, sheets, cells, scenarios, versions, LBO |
+| **collaborationApi** | `collaboration.api.ts` | 12 | Comments, annotations, presence, edit history |
+| **valuationsApi** | `valuations.api.ts` | 8 | DCF, Trading Comps, Precedents, Merger analysis |
+| **dueDiligenceApi** | `dueDiligence.api.ts` | 10 | DD analysis, checklists, QoE, risk matrix |
+| **exportApi** | `export.api.ts` | 12 | PDF/PPTX generation, templates, download |
+| **industryApi** | `industry.api.ts` | 12 | Sale-leaseback, REIT, NAV analysis |
+| **excelApi** | `excel.api.ts` | 12 | Cell linking, sync, audit, WebSocket |
+| **Total** | | **97** | |
+
+### Usage Examples
+
+```typescript
+// Using Redux thunks (recommended for state management)
+import { useAppDispatch, useAppSelector, login, fetchModels } from '@/app/store';
+
+function LoginComponent() {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(state => state.auth.user);
+
+  const handleLogin = async () => {
+    await dispatch(login({ email: 'user@example.com', password: 'pass' }));
+    await dispatch(fetchModels());
+  };
+}
+
+// Direct API calls (for one-off requests)
+import { modelsApi, valuationsApi } from '@/services/api';
+
+async function runAnalysis() {
+  // LBO Analysis
+  const lboResult = await modelsApi.analyzeLBO({
+    enterprise_value: 500,
+    equity_purchase_price: 450,
+    senior_debt_amount: 250,
+    // ...
+  });
+  console.log(`IRR: ${(lboResult.outputs.irr * 100).toFixed(1)}%`);
+
+  // DCF Valuation
+  const dcfResult = await valuationsApi.runDCF({
+    revenue_base: 100000000,
+    revenue_growth_rates: [0.1, 0.08, 0.06, 0.05, 0.05],
+    // ...
+  });
+  console.log(`Enterprise Value: $${dcfResult.outputs.enterprise_value.toLocaleString()}`);
+}
+```
+
+### TypeScript Types
+
+All API types are fully typed and match backend models:
+
+```typescript
+import type {
+  User, UserRole,
+  FinancialModel, ModelType,
+  Sheet, Cell, CellValue,
+  Scenario, Comment, Annotation,
+  LBORequest, LBOResponse,
+  DCFRequest, DCFResponse,
+  DDFinding, QoEAdjustment,
+} from '@/services/api';
+```
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -616,11 +734,15 @@ micro1/
 │   │   │
 │   │   ├── app/                      # App Configuration
 │   │   │   ├── store/                # Redux Toolkit
-│   │   │   │   ├── index.ts          # Store configuration
-│   │   │   │   └── slices/           # Redux slices
-│   │   │   │       ├── authSlice.ts
-│   │   │   │       ├── modelsSlice.ts
-│   │   │   │       └── collaborationSlice.ts
+│   │   │   │   ├── index.ts          # Store config + typed hooks
+│   │   │   │   ├── slices/           # Redux slices
+│   │   │   │   │   ├── auth.slice.ts
+│   │   │   │   │   ├── models.slice.ts
+│   │   │   │   │   └── collaboration.slice.ts
+│   │   │   │   └── thunks/           # Async thunks (API integration)
+│   │   │   │       ├── index.ts
+│   │   │   │       ├── auth.thunks.ts    # login, register, logout
+│   │   │   │       └── models.thunks.ts  # fetchModels, createModel, etc.
 │   │   │   │
 │   │   │   └── providers/            # React Context Providers
 │   │   │       ├── role-provider.tsx       # RBAC provider
@@ -701,7 +823,20 @@ micro1/
 │   │   │   └── hooks/                # Custom Hooks
 │   │   │
 │   │   └── services/                 # Frontend Services
-│   │       └── aiService.ts          # AI Service Layer
+│   │       ├── index.ts              # Services index
+│   │       ├── aiService.ts          # AI Service Layer
+│   │       └── api/                  # Backend API Integration (97 endpoints)
+│   │           ├── client.ts         # Axios client with interceptors
+│   │           ├── types.ts          # TypeScript types (matches backend)
+│   │           ├── auth.api.ts       # Authentication (9 endpoints)
+│   │           ├── models.api.ts     # Financial models (22 endpoints)
+│   │           ├── collaboration.api.ts  # Comments, presence (12 endpoints)
+│   │           ├── valuations.api.ts # DCF, Comps, Mergers (8 endpoints)
+│   │           ├── dueDiligence.api.ts   # DD, QoE, Risk (10 endpoints)
+│   │           ├── export.api.ts     # PDF, PPTX export (12 endpoints)
+│   │           ├── industry.api.ts   # REIT, NAV, Sale-LB (12 endpoints)
+│   │           ├── excel.api.ts      # Excel integration (12 endpoints)
+│   │           └── index.ts          # Central exports
 │   │
 │   ├── package.json
 │   ├── vite.config.ts
