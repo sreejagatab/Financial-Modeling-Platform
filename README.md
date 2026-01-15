@@ -60,9 +60,13 @@ micro1/
 │   ├── core/                  # Business logic
 │   │   ├── engine/            # Calculation engine
 │   │   │   ├── base_model.py  # Abstract financial model
-│   │   │   └── calculation_graph.py  # Dependency DAG
+│   │   │   ├── calculation_graph.py  # Dependency DAG
+│   │   │   └── scenario_manager.py  # Scenario management
 │   │   └── models/            # Model implementations
-│   │       └── lbo_model.py   # LBO with returns
+│   │       ├── lbo_model.py   # LBO with returns
+│   │       ├── three_statement.py  # 3-statement model
+│   │       ├── operating_model.py  # Operating model
+│   │       └── cash_flow_13week.py  # 13-week cash flow
 │   ├── db/models/             # SQLAlchemy models
 │   ├── alembic/               # Database migrations
 │   ├── services/              # Business services
@@ -380,13 +384,14 @@ curl -X POST http://localhost:8001/api/v1/models/lbo/analyze \
 ```bash
 cd backend
 
-# Run all tests (33 tests)
+# Run all tests (56 tests)
 pytest tests/ -v
 
 # Run specific test file
 pytest tests/test_lbo_model.py -v
 pytest tests/test_auth.py -v
 pytest tests/test_websocket.py -v
+pytest tests/test_financial_models.py -v
 
 # Run with coverage
 pytest tests/ --cov=core --cov=services --cov-report=html
@@ -469,15 +474,18 @@ The Excel add-in provides custom functions for platform integration:
 - [x] WebSocket tests (12 tests)
 - [x] Total: 33 tests passing
 
-### Phase 4: Additional Models (Next)
-- [ ] 3-statement model
-- [ ] Operating model
-- [ ] 13-week cash flow
-- [ ] Sale-leaseback
-- [ ] REIT conversion
-- [ ] NAV model
+### Phase 4: Financial Engine Enhancement (Completed)
+- [x] 3-statement model (Income Statement, Balance Sheet, Cash Flow)
+- [x] Operating model with revenue streams and cost drivers
+- [x] 13-week cash flow for liquidity forecasting
+- [x] Scenario management (Base, Upside, Downside, Custom)
+- [x] Monte Carlo simulation support
+- [x] Probability-weighted analysis
+- [x] Sensitivity analysis framework
+- [x] Financial models tests (23 tests)
+- [x] Total: 56 tests passing
 
-### Phase 5: Export & Reporting
+### Phase 5: Export & Reporting (Next)
 - [ ] PDF generation
 - [ ] PowerPoint export
 - [ ] Print-optimized layouts
@@ -539,6 +547,151 @@ ALLOWED_ORIGINS=["http://localhost:3000", "http://localhost:5173"]
 
 MIT License - see LICENSE file for details.
 
+## Financial Models
+
+### 3-Statement Model
+
+Integrated Income Statement, Balance Sheet, and Cash Flow Statement with full circular reference handling.
+
+```python
+from core.models import ThreeStatementModel, ThreeStatementInputs
+
+inputs = ThreeStatementInputs(
+    base_revenue=1_000_000,
+    base_cogs=600_000,
+    projection_years=5,
+    revenue_growth_rates=[0.08, 0.07, 0.06, 0.05, 0.05],
+    cogs_percent_revenue=[0.60, 0.59, 0.58, 0.58, 0.57],
+    ar_days=45,
+    inventory_days=50,
+    ap_days=35,
+    tax_rate=0.25,
+)
+
+model = ThreeStatementModel(model_id="3stmt-1", name="Company Forecast")
+model.set_inputs(inputs)
+result = model.calculate()
+
+print(f"Year 5 Revenue: ${result.outputs['income_statement']['revenue'][-1]:,.0f}")
+print(f"Year 5 Net Income: ${result.outputs['income_statement']['net_income'][-1]:,.0f}")
+print(f"Average ROIC: {sum(result.outputs['metrics']['roic'])/5:.1%}")
+```
+
+### Operating Model
+
+Detailed revenue build from product lines with cost drivers and headcount planning.
+
+```python
+from core.models import OperatingModel, OperatingInputs, RevenueStream, CostDriver
+
+inputs = OperatingInputs(
+    projection_years=5,
+    revenue_streams=[
+        RevenueStream(
+            name="SaaS Subscriptions",
+            base_units=1000,
+            base_price=1200,
+            unit_growth_rates=[0.20, 0.15, 0.12, 0.10, 0.08],
+        ),
+        RevenueStream(
+            name="Professional Services",
+            base_units=50,
+            base_price=10000,
+            unit_growth_rates=[0.10, 0.10, 0.08, 0.05, 0.05],
+        ),
+    ],
+    cost_of_goods=[
+        CostDriver(name="Hosting", variable_rate=0.15, variable_basis="revenue"),
+        CostDriver(name="Support", fixed_amount=50000, inflation_rate=0.03),
+    ],
+    base_headcount=20,
+    revenue_per_employee=150000,
+    avg_salary=80000,
+)
+
+model = OperatingModel(model_id="op-1", name="SaaS Forecast")
+model.set_inputs(inputs)
+result = model.calculate()
+```
+
+### 13-Week Cash Flow
+
+Short-term liquidity forecasting with revolver management.
+
+```python
+from core.models import CashFlow13WeekModel, CashFlowInputs, WeeklyCashInput
+
+inputs = CashFlowInputs(
+    beginning_cash=500_000,
+    revolver_capacity=1_000_000,
+    minimum_cash_buffer=100_000,
+    base_weekly_collections=200_000,
+    base_weekly_payables=80_000,
+    payroll_amount=150_000,
+    payroll_frequency="biweekly",
+    debt_payments=[
+        WeeklyCashInput(week=4, amount=100_000),
+        WeeklyCashInput(week=8, amount=100_000),
+    ],
+)
+
+model = CashFlow13WeekModel(model_id="13wk-1", name="Q1 Forecast")
+model.set_inputs(inputs)
+result = model.calculate()
+
+print(f"Week 13 Ending Cash: ${result.outputs['liquidity']['ending_cash'][-1]:,.0f}")
+print(f"Minimum Cash: ${result.outputs['metrics']['minimum_cash_amount']:,.0f}")
+```
+
+### Scenario Management
+
+Create and compare scenarios with probability-weighted analysis.
+
+```python
+from core.engine import ScenarioManager, ScenarioType
+from core.models import LBOModel, LBOInputs
+
+base_inputs = LBOInputs(
+    enterprise_value=500,
+    sponsor_equity=200,
+    exit_multiple=8.0,
+    # ... other inputs
+)
+
+manager = ScenarioManager(base_inputs)
+
+# Create scenarios
+manager.create_scenario(
+    name="Bull Case",
+    scenario_type=ScenarioType.UPSIDE,
+    assumptions={"exit_multiple": 10.0, "revenue_growth_rates": [0.08, 0.07, 0.06, 0.05, 0.05]},
+    probability_weight=0.25,
+)
+
+manager.create_scenario(
+    name="Bear Case",
+    scenario_type=ScenarioType.DOWNSIDE,
+    assumptions={"exit_multiple": 6.0},
+    probability_weight=0.25,
+)
+
+# Compare scenarios
+def calc_fn(inputs):
+    model = LBOModel("temp", "temp")
+    model.set_inputs(inputs)
+    return model.calculate().outputs
+
+comparison = manager.compare_scenarios(
+    scenario_ids=[s.id for s in manager.list_scenarios()],
+    calculate_fn=calc_fn,
+    output_names=["irr", "moic"],
+)
+
+# Probability-weighted output
+weighted = manager.probability_weighted_output(calc_fn, ["irr", "moic"])
+print(f"Probability-Weighted IRR: {weighted['irr']:.1%}")
+```
+
 ---
 
-**Current Status**: Phase 3 Complete - Real-time collaboration with WebSocket, presence awareness, cell locking, and comments/annotations. 33 tests passing.
+**Current Status**: Phase 4 Complete - Enhanced financial engine with 3-statement model, operating model, 13-week cash flow, and full scenario management. 56 tests passing.
